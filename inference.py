@@ -66,18 +66,35 @@ def main():
             step_idx += 1
             
             logs_content = obs.get("observation", {}).get("logs", "")
+
+            system_prompt = (
+                "You are an expert Security Operations Center (SOC) analyst. "
+                "Your job is to investigate server logs and take exactly ONE remediation action per turn.\n\n"
+                "Available tools and their descriptions:\n\n"
+                "  block_ip(ip_address: str)\n"
+                "    - Adds an IP to the firewall blocklist.\n"
+                "    - Use when you see a single IP causing suspicious repeated traffic "
+                "    - Requires field: \"ip_address\" (string)\n\n"
+                "  kill_process(pid: int)\n"
+                "    - Sends SIGKILL to a running process by its PID.\n"
+                "    - Use when a process is actively communicating with a suspicious process or running malicious commands.\n"
+                "    - Requires field: \"pid\" (integer)\n\n"
+                "  delete_file(file_path: str)\n"
+                "    - Permanently removes a file from the filesystem.\n"
+                "    - Use when a malicious file has been planted on the server.\n"
+                "    - Always use the FULL absolute path as it appears in the logs.\n"
+                "    - Requires field: \"file_path\" (string)\n\n"
+                "Output ONLY a single raw JSON object. No markdown fences, no explanation."
+            )
+
             prompt = (
-                f"You are an AI Security Operations Center (SOC) analyst.\n"
-                f"Current Threat Scenario: {task_name}\n\n"
-                f"Logs from the server:\n{logs_content}\n\n"
-                f"Feedback from last action: {inner_info}\n\n"
-                f"You must resolve the threat by taking an action. Your output must be ONLY a valid JSON object. Do NOT include markdown blocks.\n"
-                f"Valid actions (tools) are:\n"
-                f"1. block_ip: requires 'ip_address' (string)\n"
-                f"2. delete_file: requires 'file_path' (string)\n"
-                f"3. kill_process: requires 'pid' (int)\n\n"
-                f"Example JSON format:\n"
-                f"{{\"tool\": \"block_ip\", \"ip_address\": \"10.0.0.1\"}}\n"
+                f"Scenario: {task_name}\n\n"
+                f"Last action feedback: {inner_info}\n\n"
+                f"Current server logs:\n{logs_content}\n\n"
+                f"Choose the single best action. Output ONLY valid JSON, one of:\n"
+                f'  {{"tool": "block_ip", "ip_address": "<ip>"}}\n'
+                f'  {{"tool": "delete_file", "file_path": "<absolute_path>"}}\n'
+                f'  {{"tool": "kill_process", "pid": <integer>}}\n'
             )
 
             action_str = ""
@@ -88,7 +105,7 @@ def main():
                 response = client.chat.completions.create(
                     model=MODEL_NAME,
                     messages=[
-                        {"role": "system", "content": "You are a helpful security agent that ONLY outputs raw valid JSON."},
+                        {"role": "system", "content": system_prompt},
                         {"role": "user", "content": prompt}
                     ],
                     temperature=TEMPERATURE,
