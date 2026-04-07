@@ -1,4 +1,4 @@
-openenv[core] @ git+https://github.com/meta-pytorch/OpenEnv.git@v0.2.1
+openenv-core @ git+https://github.com/meta-pytorch/OpenEnv.git@v0.2.1
 fastapi>=0.115.0
 uvicorn>=0.24.0
 gradio>=4.0.0
