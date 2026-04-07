@@ -62,6 +62,9 @@ class MicroSocGymEnvironment(Environment):
         self._scenario_index = 0
         self._state = MicroSocGymState()
 
+        self._hard_pid_killed: bool = False
+        self._hard_file_deleted: bool = False
+
     # ------------------------------------------------------------------
     # OpenEnv API
     # ------------------------------------------------------------------
@@ -79,6 +82,10 @@ class MicroSocGymEnvironment(Environment):
             total_reward=0.0,
             threat_neutralised=False,
         )
+
+        # Reset hard scenario tracking flags each episode
+        self._hard_pid_killed = False
+        self._hard_file_deleted = False
 
         # 1. Clear log files
         self._clear_file(ACCESS_LOG)
@@ -111,12 +118,13 @@ class MicroSocGymEnvironment(Environment):
         time.sleep(1.5)
 
         logs = self._read_logs(scenario)
+
         return MicroSocGymObservation(
             logs=logs,
             reward=0.0,
             done=False,
             success=False,
-            info=f"Episode started. Scenario: {scenario}. Analyse logs and neutralise the threat.",
+            info=f"Episode started. Scenario: {scenario}. Analyse the logs and neutralise the threat.",
         )
 
     def step(self, action: MicroSocGymAction) -> MicroSocGymObservation:
@@ -216,20 +224,14 @@ class MicroSocGymEnvironment(Environment):
         backdoor_path = os.path.join(WEBROOT, "backdoor.php")
         backdoor_exists = os.path.exists(backdoor_path)
 
-        # Track partial completion in state info dict
-        if not hasattr(self._state, "_hard_pid_killed"):
-            self._state._hard_pid_killed = False
-        if not hasattr(self._state, "_hard_file_deleted"):
-            self._state._hard_file_deleted = False
-
         if action.tool == "kill_process":
             pid = action.pid
             if pid is None:
                 return REWARD_WRONG_TOOL, False, False, "Provide a pid to kill_process."
             killed = self._kill_process(pid)
             if killed:
-                self._state._hard_pid_killed = True
-                partial = " Now delete the backdoor file." if backdoor_exists else ""
+                self._hard_pid_killed = True
+                partial = " Now delete the malicious file." if backdoor_exists else ""
                 r = REWARD_KILL_PID
             else:
                 r = REWARD_WRONG_TOOL
@@ -241,8 +243,8 @@ class MicroSocGymEnvironment(Environment):
             path = (action.file_path or "").strip()
             if path == backdoor_path and backdoor_exists:
                 os.remove(backdoor_path)
-                self._state._hard_file_deleted = True
-                partial = " Now kill the attacker process." if not self._state._hard_pid_killed else ""
+                self._hard_file_deleted = True
+                partial = " Now kill the attacker process." if not self._hard_pid_killed else ""
                 done, success = self._hard_check_complete()
                 return REWARD_DELETE_FILE, done, success, f"Deleted {path}.{partial}"
             elif not backdoor_exists:
@@ -254,9 +256,7 @@ class MicroSocGymEnvironment(Environment):
             return REWARD_WRONG_TOOL, False, False, "Use kill_process or delete_file for this scenario."
 
     def _hard_check_complete(self):
-        pid_done = getattr(self._state, "_hard_pid_killed", False)
-        file_done = getattr(self._state, "_hard_file_deleted", False)
-        if pid_done and file_done:
+        if self._hard_pid_killed and self._hard_file_deleted:
             return True, True
         return False, False
 
@@ -271,14 +271,53 @@ class MicroSocGymEnvironment(Environment):
         self._nginx_reload()
 
     def _kill_process(self, pid: int) -> bool:
-        """Send SIGKILL to pid. Returns True if successful."""
+        """Kill pid. Returns True if pid is gone after the attempt."""
         try:
-            result = subprocess.run(
-                ["kill", "-9", str(pid)],
-                capture_output=True, timeout=5
+            proc_cmdline = f"/proc/{pid}/cmdline"
+            proc_status  = f"/proc/{pid}/status"
+
+            # Validate the PID exists before attempting anything
+            if not os.path.exists(proc_status):
+                print(f"[KILL] pid={pid} does not exist", file=sys.stderr, flush=True)
+                return False
+
+            try:
+                with open(proc_cmdline, "rb") as f:
+                    cmdline = f.read().replace(b"\x00", b" ").decode(errors="replace").strip()
+                print(f"[KILL] pid={pid} cmdline={cmdline!r}", file=sys.stderr, flush=True)
+            except OSError:
+                cmdline = "<unknown>"
+                print(f"[KILL] pid={pid} cmdline unreadable", file=sys.stderr, flush=True)
+
+            import signal
+            try:
+                os.kill(pid, signal.SIGKILL)
+                print(f"[KILL] sent SIGKILL to {pid}", file=sys.stderr, flush=True)
+            except ProcessLookupError:
+                print(f"[KILL] pid={pid} already gone", file=sys.stderr, flush=True)
+
+            r = subprocess.run(
+                ["supervisorctl", "stop", "hard_attack"],
+                capture_output=True, text=True, timeout=5
             )
-            return result.returncode == 0
-        except Exception:
+            print(f"[KILL] supervisorctl stop: rc={r.returncode} out={r.stdout.strip()!r}", file=sys.stderr, flush=True)
+
+            time.sleep(1.0)
+
+            if not os.path.exists(proc_status):
+                print(f"[KILL] result=True (proc gone)", file=sys.stderr, flush=True)
+                return True
+
+            try:
+                with open(proc_status) as f:
+                    state_line = next((l for l in f if l.startswith("State:")), "")
+                print(f"[KILL] state_after={state_line.strip()!r}", file=sys.stderr, flush=True)
+                return "Z" in state_line
+            except OSError:
+                return True
+
+        except Exception as e:
+            print(f"[KILL] exception: {e}", file=sys.stderr, flush=True)
             return False
 
     def _nginx_reload(self) -> None:
