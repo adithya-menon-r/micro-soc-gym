@@ -85,13 +85,15 @@ class MicroSocGymClient:
             file_path:  Required for delete_file
             pid:        Required for kill_process
         """
-        payload: Dict[str, Any] = {"tool": tool}
+        action_payload: Dict[str, Any] = {"tool": tool}
         if ip_address is not None:
-            payload["ip_address"] = ip_address
+            action_payload["ip_address"] = ip_address
         if file_path is not None:
-            payload["file_path"] = file_path
+            action_payload["file_path"] = file_path
         if pid is not None:
-            payload["pid"] = pid
+            action_payload["pid"] = pid
+
+        payload = {"action": action_payload}
 
         resp = self.session.post(
             f"{self.base_url}/step",
@@ -131,9 +133,11 @@ def _banner(text: str) -> None:
 def _print_obs(obs: Dict[str, Any]) -> None:
     reward = obs.get("reward", 0.0)
     done   = obs.get("done", False)
-    success = obs.get("success", False)
-    info   = obs.get("info", "")
-    logs   = obs.get("logs", "")
+
+    inner_obs = obs.get("observation", {})
+    success = inner_obs.get("success", False)
+    info   = inner_obs.get("info", "")
+    logs   = inner_obs.get("logs", "")
 
     print(f"  reward={reward:+.1f}  done={done}  success={success}")
     print(f"  info  : {info}")
@@ -160,9 +164,9 @@ def run_easy(client: MicroSocGymClient) -> float:
     print("  → Sending: block_ip(10.0.0.1)")
     obs = client.step(tool="block_ip", ip_address="10.0.0.1")
     _print_obs(obs)
+    
+    total = obs.get("reward", 0.0)
 
-    state = client.state()
-    total = state.get("total_reward", 0.0)
     print(f"  Episode total reward: {total:+.1f}")
     return total
 
@@ -175,20 +179,19 @@ def run_medium(client: MicroSocGymClient) -> float:
     # Wait a bit extra — medium writes every 4s
     print("  (waiting 5s for auth.log to populate…)")
     time.sleep(5)
-    obs = client.reset()   # fresh logs now populated
+    # The subsequent step() action will read the newly populated logs.
     _print_obs(obs)
 
     # Demo false positive first, then the correct action
     print("  → Sending: block_ip(10.0.0.100)  [intentional false positive demo]")
-    obs = client.step(tool="block_ip", ip_address="10.0.0.100")
-    _print_obs(obs)
+    obs1 = client.step(tool="block_ip", ip_address="10.0.0.100")
+    _print_obs(obs1)
 
     print("  → Sending: block_ip(10.0.0.2)  [correct attacker]")
-    obs = client.step(tool="block_ip", ip_address="10.0.0.2")
-    _print_obs(obs)
+    obs2 = client.step(tool="block_ip", ip_address="10.0.0.2")
+    _print_obs(obs2)
 
-    state = client.state()
-    total = state.get("total_reward", 0.0)
+    total = obs1.get("reward", 0.0) + obs2.get("reward", 0.0)
     print(f"  Episode total reward: {total:+.1f}")
     return total
 
@@ -208,7 +211,7 @@ def run_hard(client: MicroSocGymClient) -> float:
     # For the client demo we ask the /state endpoint; a real RL agent would
     # parse the log or enumerate /proc to find the hard_attack process.
     import re
-    logs = obs.get("logs", "")
+    logs = obs.get("observation", {}).get("logs", "")
     pid_hint = None
 
     # Try to extract a PID from a log line mentioning backdoor.php
@@ -218,19 +221,21 @@ def run_hard(client: MicroSocGymClient) -> float:
         pid_hint = int(pids_in_logs[0])
         print(f"  → Extracted PID hint from logs: {pid_hint}")
 
+    total = 0.0
+
     if pid_hint:
         print(f"  → Sending: kill_process({pid_hint})")
-        obs = client.step(tool="kill_process", pid=pid_hint)
-        _print_obs(obs)
+        obs1 = client.step(tool="kill_process", pid=pid_hint)
+        _print_obs(obs1)
+        total += obs1.get("reward", 0.0)
     else:
         print("  → No PID found in logs — skipping kill_process (hard scenario requires Linux /proc)")
 
     print("  → Sending: delete_file('/var/www/html/backdoor.php')")
-    obs = client.step(tool="delete_file", file_path="/var/www/html/backdoor.php")
-    _print_obs(obs)
+    obs2 = client.step(tool="delete_file", file_path="/var/www/html/backdoor.php")
+    _print_obs(obs2)
+    total += obs2.get("reward", 0.0)
 
-    state = client.state()
-    total = state.get("total_reward", 0.0)
     print(f"  Episode total reward: {total:+.1f}")
     return total
 
