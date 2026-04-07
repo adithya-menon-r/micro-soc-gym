@@ -62,6 +62,11 @@ def main():
             step_idx += 1
             
             logs_content = obs.get("observation", {}).get("logs", "")
+            prompt = (
+                f"You are an AI Security Operations Center (SOC) analyst.\n"
+                f"Current Threat Scenario: {task_name}\n\n"
+                f"Logs from the server:\n{logs_content}\n\n"
+                f"Feedback from last action: {inner_info}\n\n"
                 f"You must resolve the threat by taking an action. Your output must be ONLY a valid JSON object. Do NOT include markdown blocks.\n"
                 f"Valid actions (tools) are:\n"
                 f"1. block_ip: requires 'ip_address' (string)\n"
