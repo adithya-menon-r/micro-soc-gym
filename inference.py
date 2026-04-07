@@ -7,7 +7,7 @@ from typing import List
 from openai import OpenAI
 
 from models import MicroSocGymAction
-from server.micro_soc_gym_environment import MicroSocGymEnvironment
+from client import MicroSocGymClient
 
 # ---------------------------------------------------------------------------
 # Required Environment Configuration via os.getenv
@@ -33,17 +33,21 @@ def main():
     # Instantiate the OpenAI client
     client = OpenAI(api_key=API_KEY, base_url=API_BASE_URL)
     
-    # Instantiate the custom OpenEnv environment directly
-    env = MicroSocGymEnvironment()
+    # We must connect to the live Docker Environment (The "World") via HTTP
+    # This prevents Windows executing Linux specific background logic.
+    env_client = MicroSocGymClient(base_url="http://localhost:7860")
 
     # The environment has exactly 3 specific scenarios.
-    # We will trigger all 3 sequentially to get the baseline for the entire benchmark.
     for scenario_idx in range(3):
-        obs = env.reset()
-        task_name = env.state.scenario
+        obs = env_client.reset()
+        
+        # In HTTP wrapper, state is obtained separately or embedded in observation
+        state = env_client.state()
+        task_name = state.get("scenario", "easy")
 
-        # Skip hard scenario if disabled (e.g. Windows dev mode prevents backdoor.php)
-        if "disabled" in obs.info.lower():
+        inner_info = obs.get("observation", {}).get("info", "")
+        # Skip hard scenario if disabled
+        if "disabled" in inner_info.lower():
             continue
 
         # Emit [START] event
@@ -51,17 +55,13 @@ def main():
 
         step_idx = 0
         rewards: List[float] = []
-        done = obs.done
-        success = obs.success
+        done = obs.get("done", False)
+        success = obs.get("observation", {}).get("success", False)
         
         while not done and step_idx < MAX_STEPS:
             step_idx += 1
             
-            prompt = (
-                f"You are an AI Security Operations Center (SOC) analyst.\n"
-                f"Current Threat Scenario: {task_name}\n\n"
-                f"Logs from the server:\n{obs.logs}\n\n"
-                f"Feedback from last action: {obs.info}\n\n"
+            logs_content = obs.get("observation", {}).get("logs", "")
                 f"You must resolve the threat by taking an action. Your output must be ONLY a valid JSON object. Do NOT include markdown blocks.\n"
                 f"Valid actions (tools) are:\n"
                 f"1. block_ip: requires 'ip_address' (string)\n"
@@ -92,13 +92,19 @@ def main():
                 action_dict = json.loads(action_str)
                 action = MicroSocGymAction(**action_dict)
                 
-                # Step the environment
-                obs = env.step(action)
+                # Step the environment via the proxy client payload
+                action_kwargs = {"tool": action.tool}
+                if action.ip_address: action_kwargs["ip_address"] = action.ip_address
+                if action.file_path: action_kwargs["file_path"] = action.file_path
+                if action.pid is not None: action_kwargs["pid"] = action.pid
+
+                obs = env_client.step(**action_kwargs)
                 
-                reward = obs.reward
+                reward = obs.get("reward", 0.0)
                 rewards.append(reward)
-                done = obs.done
-                success = obs.success
+                done = obs.get("done", False)
+                success = obs.get("observation", {}).get("success", False)
+                inner_info = obs.get("observation", {}).get("info", "")
 
             except Exception as e:
                 # Catch validation layers (e.g., Pydantic parsing errors)
@@ -124,7 +130,7 @@ def main():
             )
 
         # End of Episode
-        score = env.state.total_reward
+        score = env_client.state().get("total_reward", 0.0)
         rewards_str = ",".join(f"{r:.2f}" for r in rewards) if rewards else "0.00"
         
         # Emit [END] event
