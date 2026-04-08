@@ -30,22 +30,19 @@ AUTH_LOG = "/var/log/auth.log"
 BLOCKLIST = "/etc/nginx/blocklist.conf"
 WEBROOT = "/var/www/html"
 
-# Scenario-specific attacker IPs injected by the attack scripts (defaults, will be randomized)
+# Scenario-specific attacker IPs injected by the attack scripts (defaults)
 EASY_ATTACKER_IP = "10.0.0.1"
 MEDIUM_ATTACKER_IP = "10.0.0.2"
-HARD_ATTACKER_IP = "10.0.0.3"          # used by hard_attack.sh C2 loop
-MEDIUM_WHITELIST = {"10.0.0.100"}   # legitimate admin - blocking this is a false positive
+HARD_ATTACKER_IP = "10.0.0.3"
+MEDIUM_WHITELIST = {"10.0.0.100"}
 HARD_BACKDOOR_NAME = "backdoor.php"
-
-# Detect Windows dev environment — hard scenario disabled there (AV deletes backdoor.php)
-_IS_LINUX = sys.platform.startswith("linux")
 
 # Reward values
 REWARD_CORRECT_BLOCK = 1.0
 REWARD_FALSE_POSITIVE = 0.0
 REWARD_KILL_PID = 0.5
 REWARD_DELETE_FILE = 0.5
-REWARD_STEP_PENALTY = 0.0          # No generic step penalty (must be >= 0)
+REWARD_STEP_PENALTY = 0.0
 REWARD_WRONG_TOOL = 0.0
 MAX_STEPS = 8
 
@@ -55,7 +52,7 @@ class MicroSocGymEnvironment(Environment):
     Micro-SOC Gym: three cybersecurity threat scenarios for RL agents.
 
     Scenario routing is round-robin per reset() call:
-        easy   -> detect 404 scanner, block_ip("10.0.0.1")
+        easy   -> detect 404 scanner, block_ip correct IP
         medium -> detect brute-force in auth.log, block correct IP without false positives
         hard   -> find webshell C2 traffic, kill_process + delete_file
     """
@@ -128,21 +125,10 @@ class MicroSocGymEnvironment(Environment):
                     pass
 
         # 4. Restart the correct attacker script via supervisord
-        #    Hard scenario disabled on non-Linux (Windows dev / AV removes backdoor.php)
-        if scenario == "hard" and not _IS_LINUX:
-            logs = "(hard scenario disabled in Windows dev mode — antivirus blocks backdoor.php creation)"
-            return MicroSocGymObservation(
-                logs=logs,
-                reward=0.0,
-                done=False,
-                success=False,
-                info="[disabled in dev mode] Hard scenario requires Linux. Skipping attacker.",
-            )
-
         self._restart_attacker(scenario)
 
         # 5. Wait briefly so fresh logs are populated
-        time.sleep(1.5)
+        time.sleep(3)
 
         logs = self._read_logs(scenario)
 
@@ -185,7 +171,7 @@ class MicroSocGymEnvironment(Environment):
         return self._state
 
     # ------------------------------------------------------------------
-    # Grader — the core reward logic
+    # Grader - the core reward logic
     # ------------------------------------------------------------------
 
     def _grade(self, action: MicroSocGymAction, scenario: str):
@@ -205,10 +191,6 @@ class MicroSocGymEnvironment(Environment):
         return reward, done, success, feedback
 
     def _grade_easy(self, action: MicroSocGymAction):
-        """
-        Easy: agent must block_ip("10.0.0.1").
-        Anything else is penalised.
-        """
         if action.tool != "block_ip":
             return REWARD_WRONG_TOOL, False, False, "Wrong tool. Use block_ip to stop the scanner."
 
@@ -224,11 +206,8 @@ class MicroSocGymEnvironment(Environment):
         return REWARD_WRONG_TOOL, False, False, f"Blocked {ip} but that is not the attacker. Check the logs."
 
     def _grade_medium(self, action: MicroSocGymAction):
-        """
-        Medium: agent must block_ip("10.0.0.2") without blocking whitelisted IPs.
-        """
         if action.tool != "block_ip":
-            return REWARD_WRONG_TOOL, False, False, "Wrong tool. Check auth.log and use block_ip."
+            return REWARD_WRONG_TOOL, False, False, "Wrong tool. Check auth.log and use correct tool."
 
         ip = (action.ip_address or "").strip()
 
@@ -241,13 +220,9 @@ class MicroSocGymEnvironment(Environment):
             self._block_ip(ip)
             return REWARD_CORRECT_BLOCK, True, True, f"Correct! Blocked brute-force attacker {ip}."
 
-        return REWARD_WRONG_TOOL, False, False, f"Blocked {ip} — not the attacker. Re-read auth.log."
+        return REWARD_WRONG_TOOL, False, False, f"Blocked {ip} - not the attacker. Re-read auth.log."
 
     def _grade_hard(self, action: MicroSocGymAction):
-        """
-        Hard: agent must BOTH kill the attacker process AND delete the backdoor.
-        Partial credit awarded. Episode ends only when both are done.
-        """
         backdoor_path = os.path.join(WEBROOT, HARD_BACKDOOR_NAME)
         backdoor_exists = os.path.exists(backdoor_path)
 
@@ -386,6 +361,6 @@ class MicroSocGymEnvironment(Environment):
                 ["tail", "-n", "50", log_file],
                 capture_output=True, text=True, timeout=5
             )
-            return result.stdout or "(log empty — attacker may not have fired yet)"
+            return result.stdout or "(log empty - attacker may not have fired yet)"
         except Exception:
             return "(could not read log file)"

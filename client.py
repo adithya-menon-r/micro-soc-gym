@@ -214,10 +214,6 @@ def run_hard(client: MicroSocGymClient) -> float:
     obs = client.reset()
     _print_obs(obs)
 
-    if "disabled" in obs.get("info", "").lower():
-        print("  [SKIP] Hard scenario disabled in this environment (likely Windows dev mode).")
-        return 0.0
-
     # In the hard scenario the logs show the attacker PID via the process list.
     # For the client demo we ask the /state endpoint; a real RL agent would
     # parse the log or enumerate /proc to find the hard_attack process.

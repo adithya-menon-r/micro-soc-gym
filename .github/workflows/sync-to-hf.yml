@@ -2,8 +2,7 @@ name: Sync to Hugging Face Space
 
 on:
   push:
-    branches: [main] # Change to 'master' if your default branch is master
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -13,7 +12,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          lfs: true # Crucial if you have large files tracked by Git LFS
+          lfs: true
           
       - name: Exclude ONLY MP4 files from HF deployment
         run: |

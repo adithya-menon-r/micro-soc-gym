@@ -1,6 +1,5 @@
 #!/bin/bash
 # Easy: Attacker repeatedly requests for 404 paths while normal users browse normal pages
-echo "Starting easy attack (noisy scanner + normal traffic)..."
 
 if [ -f /tmp/micro_soc_state.env ]; then
     source /tmp/micro_soc_state.env
@@ -14,6 +13,8 @@ NORMAL_IPS=("${EASY_NORMAL_IPS[@]}")
 NORMAL_PATHS=("/" "/index.html" "/about" "/contact" "/products" "/favicon.ico")
 COUNTER=0
 
+echo "Starting easy scenario attack..."
+
 while true; do
     # Attacker does rapid scan of suspicious paths
     curl -s -H "X-Forwarded-For: $ATTACKER_IP" http://localhost/admin > /dev/null
@@ -24,7 +25,7 @@ while true; do
 
     COUNTER=$((COUNTER + 1))
 
-    # Every other cycle, 1-2 normal user requests to mix in normal traffic
+    # Every other cycle includes 1-2 normal user requests to mix in normal traffic
     if [ $((COUNTER % 2)) -eq 0 ]; then
         IP=${NORMAL_IPS[$((RANDOM % ${#NORMAL_IPS[@]}))]}
         PATH_=${NORMAL_PATHS[$((RANDOM % ${#NORMAL_PATHS[@]}))]}
