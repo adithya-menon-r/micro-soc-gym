@@ -18,7 +18,7 @@ tags:
 1. [Environment Description & Motivation](#1-environment-description--motivation)
 2. [Observation & Action Space](#2-observation--action-space)
 3. [Task Descriptions & Difficulty](#3-task-descriptions--difficulty)
-4. [Baseline Evaluation & Inference Logs](#4-baseline-evaluation--inference-logs)
+4. [Inference & Results](#4-inference--results)
 5. [Visual Workflow](#5-visual-workflow)
 6. [Setup & Usage Instructions](#6-setup--usage-instructions)
 7. [System Architecture](#7-system-architecture)
@@ -99,7 +99,7 @@ To help visualise the environment, we built an interactive Gradio Dashboard whic
 
 It lets you manually play the role of the responding agent. By reading the logs, triggering tools, and seeing how the environment scores your actions, you can easily understand the mechanics, constraints, and underlying reward logic the Agent has to learn.
 
-<video src="media/gradio-dashboard.mp4" width="100%" controls></video>
+https://github.com/user-attachments/assets/e3428fef-4008-47f6-b9df-d95cee8cc7a6
 
 ## 6. Setup & Usage Instructions
 
@@ -241,7 +241,7 @@ Before deploying, we ran the environment through the given Pre-Validation Script
 
 </details>
 
-## Team
+## 10. Team
 
 | Name                   | GitHub ID                                               |
 |------------------------|---------------------------------------------------------|
