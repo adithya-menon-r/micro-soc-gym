@@ -21,6 +21,7 @@ app_port: 7860
 - [4. Setup & Usage Instructions](#4-setup--usage-instructions)
 - [5. Baseline Scores](#5-baseline-scores)
 - [6. Project Architecture](#6-project-architecture)
+- [7. Pre-Validation checks](#7-pre-validation-results)
 
 ---
 
@@ -142,3 +143,36 @@ micro_soc_gym/
 ├── client.py                         # Synchronous HTTP validation client
 └── models.py                         # Application-layer Pydantic schema exports
 ```
+
+## 7. Pre-Validation Results
+
+Prior to deployment, the environment underwent strict automated compliance testing using the official OpenEnv validation suite. All requisite checks—including Hugging Face Space liveness, Docker container build integrity, and OpenEnv schema validation—passed successfully.
+
+![OpenEnv Pre-Validation Success Output](pre-validation.png)
+
+<details>
+<summary><b>View Raw Validation Logs</b></summary>
+
+```text
+========================================
+  OpenEnv Submission Validator
+========================================
+[11:21:05] Repo:     /c/Users/hp859/Desktop/Meta X Hugging_Face Hacks/micro_soc_gym
+[11:21:05] Ping URL: https://harinie4466-micro-soc-gym.hf.space
+
+[11:21:05] Step 1/3: Pinging HF Space (https://harinie4466-micro-soc-gym.hf.space/reset) ...
+[11:21:11] PASSED -- HF Space is live and responds to /reset
+[11:21:11] Step 2/3: Running docker build ...
+[11:21:11]   Found Dockerfile in /c/Users/hp859/Desktop/Meta X Hugging_Face Hacks/micro_soc_gym
+[11:21:19] PASSED -- Docker build succeeded
+[11:21:19] Step 3/3: Running openenv validate ...
+[11:21:33] PASSED -- openenv validate passed
+[11:21:33]   [OK] micro_soc_gym: Ready for multi-mode deployment
+
+========================================
+  All 3/3 checks passed!
+  Your submission is ready to submit.
+========================================
+
+```
+
