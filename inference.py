@@ -185,15 +185,19 @@ def main():
             )
 
         # End of Episode
-        score = sum(rewards)
+        raw_score = sum(rewards)
         rewards_str = ",".join(f"{r:.2f}" for r in rewards) if rewards else "0.00"
-        
+
+        # Normalize score to be strictly between 0 and 1 (exclusive).
+        MAX_EPISODE_REWARD = 1.0
+        score = max(0.001, min(0.999, raw_score / MAX_EPISODE_REWARD))
+
         # Emit [END] event
         print(
             f"[END] success={str(success).lower()} "
             f"steps={step_idx} "
-            f"score={score:.2f} "
-            f"rewards={rewards_str}", 
+            f"score={score:.4f} "
+            f"rewards={rewards_str}",
             flush=True
         )
 
