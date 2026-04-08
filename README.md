@@ -18,11 +18,11 @@ app_port: 7860
 - [1. Environment Description & Motivation](#1-environment-description--motivation)
 - [2. Observation & Action Space](#2-observation--action-space)
 - [3. Task Descriptions & Difficulty](#3-task-descriptions--difficulty)
-- [4. Setup & Usage Instructions](#4-setup--usage-instructions)
-- [5. Baseline Scores](#5-baseline-scores)
-- [6. Project Architecture](#6-project-architecture)
-- [7. Pre-Validation Results](#7-pre-validation-results)
-- [8. Visual Workflow](#8-visual-workflow)
+- [4. Baseline Evaluation & Inference Logs](#4-baseline-evaluation--inference-logs)
+- [5. Visual Workflow](#5-visual-workflow)
+- [6. Setup & Usage Instructions](#6-setup--usage-instructions)
+- [7. Project Architecture](#7-project-architecture)
+- [8. Pre-Validation Results](#8-pre-validation-results)
 
 ---
 
@@ -83,9 +83,27 @@ The environment sequences through tiered adversarial scenarios via a round-robin
 
 ---
 
-## 4. Setup & Usage Instructions
+## 4. Baseline Evaluation & Inference Logs
 
-### 4.1 Operating the Docker Monolith (Local/Deploy)
+The environment is designed to rigorously evaluate LLM capabilities sequentially across varying difficulty tiers. As demonstrated below, a powerful instruction-tuned model (`Qwen/Qwen2.5-72B-Instruct`) was executed against the **Micro-SOC Gym** using the built-in ReAct `inference.py` harness.
+
+The evaluation trace highlights the agent successfully parsing the underlying state and dispatching the exact appropriate API calls (`block_ip`, `delete_file`, `kill_process`) to achieve a perfect `3.00/3.00` cumulative score with precise, minimal-step interventions.
+
+![Inference Execution Trace demonstrating Qwen 72B resolving all tiered threats](inference.png)
+
+---
+
+## 5. Visual Workflow
+
+The following demonstration showcases the interactive **Gradio Telemetry Dashboard** hosted on Hugging Face Spaces. It provides a visual, real-time representation of the triage environment, allowing users to manually act as the responding agent. By analyzing live log streams and manually executing remediation tools, users can intuitively understand the environment's mechanics, active threat scenarios, and the precise constraints an AI agent must navigate.
+
+https://github.com/user-attachments/assets/d8978acb-e636-4ea6-9ece-084598976c6b
+
+---
+
+## 6. Setup & Usage Instructions
+
+### 6.1 Operating the Docker Monolith (Local/Deploy)
 
 Because the environment performs system-level state management, it executes flawlessly inside an isolated Hugging Face Docker Space or a local Unix deployment.
 
@@ -99,7 +117,7 @@ docker run -p 7860:7860 micro-soc-gym
 
 **Bonus:** You can access the unified **Gradio Triage Dashboard** visually at `http://localhost:7860/` for manual testing and live-stream observation.
 
-### 4.2 Scripted Agent Initialization
+### 6.2 Scripted Agent Initialization
 
 To launch a programmatically controlled AI agent test loop against your running server:
 
@@ -118,24 +136,11 @@ python inference.py
 
 ---
 
-## 5. Baseline Scores
-
-Agents have a maximum horizon of **8 steps** per scenario before timeout failure. The ideal score is **+1.0 per solved scenario**, peaking at a **+3.0 cumulative total**.
-
-| Agent Execution Model              | Scenario: Easy | Scenario: Medium | Scenario: Hard |  Final Score   |
-| :--------------------------------- | :------------: | :--------------: | :------------: | :------------: |
-| **Qwen/Qwen2.5-72B-Instruct**      |     `[  ]`     |      `[  ]`      |     `[  ]`     | `[   ] / 3.00` |
-| **Base Baseline (Random Choices)** |     `0.00`     |      `0.00`      |     `0.00`     | `0.00 / 3.00`  |
-
-_(Insert your evaluated baseline runs in the empty spaces above)._
-
----
-
-## 6. Project Architecture
+## 7. Project Architecture
 
 The codebase handles networking logic securely decoupled from kernel requirements via supervised orchestration.
 
-### 6.1 System Architecture Diagram
+### 7.1 System Architecture Diagram
 
 ```text
 +-------------------------------------------------------------+
@@ -176,7 +181,7 @@ The codebase handles networking logic securely decoupled from kernel requirement
 +-------------------------------------------------------------+
 ```
 
-### 6.2 Directory Structure
+### 7.2 Directory Structure
 
 ```text
 micro_soc_gym/
@@ -199,7 +204,7 @@ micro_soc_gym/
 └── models.py                         # Application-layer Pydantic schema exports
 ```
 
-## 7. Pre-Validation Results
+## 8. Pre-Validation Results
 
 Prior to deployment, the environment underwent strict automated compliance testing using the official OpenEnv validation suite. All requisite checks—including Hugging Face Space liveness, Docker container build integrity, and OpenEnv schema validation—passed successfully.
 
@@ -232,11 +237,3 @@ Prior to deployment, the environment underwent strict automated compliance testi
 ```
 
 </details>
-
----
-
-## 8. Visual Workflow
-
-The following demonstration showcases the interactive **Gradio Telemetry Dashboard** hosted on Hugging Face Spaces. It provides a visual, real-time representation of the triage environment, allowing users to manually act as the responding agent. By analyzing live log streams and manually executing remediation tools, users can intuitively understand the environment's mechanics, active threat scenarios, and the precise constraints an AI agent must navigate.
-
-https://github.com/user-attachments/assets/d8978acb-e636-4ea6-9ece-084598976c6b
