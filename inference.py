@@ -84,7 +84,7 @@ def main():
                 "  delete_file(file_path: str)\n"
                 "    - Permanently removes a file from the filesystem.\n"
                 "    - Use when a malicious file has been planted on the server.\n"
-                "    - Always use the FULL absolute path exactly as it appears in the logs.\n"
+                "    - Always use the FULL absolute filesystem path. (Hint: access logs often show paths relative to the web server's document root. You must infer the absolute path based on standard Linux web server configurations).\n"
                 "    - Requires field: \"file_path\" (string)\n\n"
                 "Take one action per turn and continue until the threat is neutralised.\n\n"
                 "Output ONLY a single raw JSON object. No markdown fences, no explanation."
