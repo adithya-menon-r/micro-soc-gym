@@ -22,9 +22,43 @@ TEMPERATURE = 0.7
 
 def extract_json(text: str) -> str:
     """Extract JSON object from LLM output, handling markdown blocks."""
-    match = re.search(r'\{.*\}', text, re.DOTALL)
+    import json
+    import re
+
+    # Step 1: Try markdown code block first (```json ... ``` or ``` ... ```)
+    match = re.search(r'```(?:json)?\s*(\{[\s\S]*?\})\s*```', text)
     if match:
-        return match.group(0)
+        candidate = match.group(1)
+        try:
+            json.loads(candidate)
+            return candidate
+        except json.JSONDecodeError:
+            pass  # fall through to brace counting
+
+    # Step 2: Brace-counting to find all valid top-level JSON objects
+    candidates = []
+    for i, ch in enumerate(text):
+        if ch == '{':
+            depth = 0
+            for j, c in enumerate(text[i:], start=i):
+                if c == '{':
+                    depth += 1
+                elif c == '}':
+                    depth -= 1
+                
+                if depth == 0:
+                    candidate = text[i:j+1]
+                    try:
+                        json.loads(candidate)
+                        candidates.append(candidate)
+                    except json.JSONDecodeError:
+                        pass
+                    break  # move to next starting {
+
+    if candidates:
+        # Return the largest valid JSON object found (most likely the intended one)
+        return max(candidates, key=len)
+
     return "{}"
 
 
