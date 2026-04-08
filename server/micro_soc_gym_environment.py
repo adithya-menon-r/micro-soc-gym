@@ -5,13 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 
 import os
-import re
 import subprocess
 import sys
 import time
 import uuid
 import random
-from typing import Optional
 
 def _random_ip():
     return f"{random.randint(1,255)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}"

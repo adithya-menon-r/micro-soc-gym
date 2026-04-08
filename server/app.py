@@ -373,10 +373,10 @@ def build_gradio_ui() -> gr.Blocks:
         # Main two-column layout
         with gr.Row():
 
-            # Left - Live log viewer
+            # Left - log viewer
             with gr.Column(scale=3, elem_classes="panel"):
                 gr.HTML('<p style="color:#94a3b8;font-size:13px;margin:0 0 8px;font-family:monospace;">'
-                        'LIVE LOG STREAM '
+                        'LOG STREAM '
                         '<span style="color:#475569;font-weight:400;">- The raw log file the agent must analyse</span></p>')
                 log_output = gr.Textbox(
                     show_label=False,

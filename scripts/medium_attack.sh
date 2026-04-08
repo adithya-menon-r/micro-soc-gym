@@ -12,7 +12,7 @@ fi
 
 USERS=("root" "admin" "ubuntu" "pi" "user" "deploy" "git")
 PORTS=(51234 52891 53007 54321 55102 56777 57438)
-COUNTER=0
+COUNTER=2
 
 echo "Starting medium scenario attack from $ATTACKER_IP... (whitelisted IP: $ADMIN_IP)"
 
