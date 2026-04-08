@@ -10,7 +10,11 @@ import subprocess
 import sys
 import time
 import uuid
+import random
 from typing import Optional
+
+def _random_ip():
+    return f"{random.randint(1,255)}.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}"
 
 from openenv.core.env_server import Environment
 
@@ -26,11 +30,12 @@ AUTH_LOG = "/var/log/auth.log"
 BLOCKLIST = "/etc/nginx/blocklist.conf"
 WEBROOT = "/var/www/html"
 
-# Scenario-specific attacker IPs injected by the attack scripts
+# Scenario-specific attacker IPs injected by the attack scripts (defaults, will be randomized)
 EASY_ATTACKER_IP = "10.0.0.1"
 MEDIUM_ATTACKER_IP = "10.0.0.2"
 HARD_ATTACKER_IP = "10.0.0.3"          # used by hard_attack.sh C2 loop
 MEDIUM_WHITELIST = {"10.0.0.100"}   # legitimate admin - blocking this is a false positive
+HARD_BACKDOOR_NAME = "backdoor.php"
 
 # Detect Windows dev environment — hard scenario disabled there (AV deletes backdoor.php)
 _IS_LINUX = sys.platform.startswith("linux")
@@ -75,6 +80,24 @@ class MicroSocGymEnvironment(Environment):
         scenario = self._SCENARIOS[self._scenario_index % len(self._SCENARIOS)]
         self._scenario_index += 1
 
+        # Generate attack properties
+        global EASY_ATTACKER_IP, MEDIUM_ATTACKER_IP, MEDIUM_WHITELIST, HARD_ATTACKER_IP, HARD_BACKDOOR_NAME
+        EASY_ATTACKER_IP = _random_ip()
+        EASY_NORMAL_IPS = [_random_ip() for _ in range(4)]
+        MEDIUM_ATTACKER_IP = _random_ip()
+        MEDIUM_WHITELIST = {_random_ip()}
+        HARD_ATTACKER_IP = _random_ip()
+        HARD_BACKDOOR_NAME = random.choice(["backdoor.php", "shell.php", "cmd.php", "wp-config.php.bak", "admin_helper.php"])
+        
+        # Write to env file for bash scripts
+        with open("/tmp/micro_soc_state.env", "w") as f:
+            f.write(f'EASY_ATTACKER_IP="{EASY_ATTACKER_IP}"\n')
+            f.write(f'EASY_NORMAL_IPS=("{" ".join(EASY_NORMAL_IPS)}")\n')
+            f.write(f'MEDIUM_ATTACKER_IP="{MEDIUM_ATTACKER_IP}"\n')
+            f.write(f'MEDIUM_ADMIN_IP="{list(MEDIUM_WHITELIST)[0]}"\n')
+            f.write(f'HARD_ATTACKER_IP="{HARD_ATTACKER_IP}"\n')
+            f.write(f'HARD_BACKDOOR_NAME="{HARD_BACKDOOR_NAME}"\n')
+
         self._state = MicroSocGymState(
             episode_id=str(uuid.uuid4()),
             step_count=0,
@@ -96,9 +119,13 @@ class MicroSocGymEnvironment(Environment):
         self._nginx_reload()
 
         # 3. Remove any planted backdoor from previous episode
-        backdoor = os.path.join(WEBROOT, "backdoor.php")
-        if os.path.exists(backdoor):
-            os.remove(backdoor)
+        for path_name in ["backdoor.php", "shell.php", "cmd.php", "wp-config.php.bak", "admin_helper.php"]:
+            backdoor = os.path.join(WEBROOT, path_name)
+            if os.path.exists(backdoor):
+                try:
+                    os.remove(backdoor)
+                except Exception:
+                    pass
 
         # 4. Restart the correct attacker script via supervisord
         #    Hard scenario disabled on non-Linux (Windows dev / AV removes backdoor.php)
@@ -221,7 +248,7 @@ class MicroSocGymEnvironment(Environment):
         Hard: agent must BOTH kill the attacker process AND delete the backdoor.
         Partial credit awarded. Episode ends only when both are done.
         """
-        backdoor_path = os.path.join(WEBROOT, "backdoor.php")
+        backdoor_path = os.path.join(WEBROOT, HARD_BACKDOOR_NAME)
         backdoor_exists = os.path.exists(backdoor_path)
 
         if action.tool == "kill_process":

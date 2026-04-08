@@ -1,6 +1,16 @@
 #!/bin/bash
-# Medium: Brute force attack attempt by Attacker IP: 10.0.0.2 (Note: Whitelisted admin IP: 10.0.0.100)
-echo "Starting medium attack (brute force)..."
+# Medium: Brute force attack attempt
+
+if [ -f /tmp/micro_soc_state.env ]; then
+    source /tmp/micro_soc_state.env
+    ATTACKER_IP=$MEDIUM_ATTACKER_IP
+    ADMIN_IP=$MEDIUM_ADMIN_IP
+else
+    ATTACKER_IP="$((RANDOM % 255 + 1)).$((RANDOM % 255)).$((RANDOM % 255)).$((RANDOM % 255))"
+    ADMIN_IP="$((RANDOM % 255 + 1)).$((RANDOM % 255)).$((RANDOM % 255)).$((RANDOM % 255))"
+fi
+
+echo "Starting medium attack (brute force) from $ATTACKER_IP... (whitelisted IP: $ADMIN_IP)"
 
 USERS=("root" "admin" "ubuntu" "pi" "user" "deploy" "git")
 PORTS=(51234 52891 53007 54321 55102 56777 57438)
@@ -12,7 +22,7 @@ while true; do
     for i in $(seq 1 $BURST); do
         USER=${USERS[$((RANDOM % ${#USERS[@]}))]}
         PORT=${PORTS[$((RANDOM % ${#PORTS[@]}))]}
-        echo "$(date '+%b %d %H:%M:%S') myhost sshd[$((RANDOM % 9000 + 1000))]: Failed password for $USER from 10.0.0.2 port $PORT ssh2" >> /var/log/auth.log
+        echo "$(date '+%b %d %H:%M:%S') myhost sshd[$((RANDOM % 9000 + 1000))]: Failed password for $USER from $ATTACKER_IP port $PORT ssh2" >> /var/log/auth.log
         sleep 0.2
     done
 
@@ -20,7 +30,7 @@ while true; do
 
     # Every 3 cycles add an admin login from the whitelisted IP
     if [ $((COUNTER % 3)) -eq 0 ]; then
-        echo "$(date '+%b %d %H:%M:%S') myhost sshd[2200]: Accepted password for admin from 10.0.0.100 port 22 ssh2" >> /var/log/auth.log
+        echo "$(date '+%b %d %H:%M:%S') myhost sshd[2200]: Accepted password for admin from $ADMIN_IP port 22 ssh2" >> /var/log/auth.log
     fi
 
     sleep 3
