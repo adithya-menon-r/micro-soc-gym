@@ -16,7 +16,6 @@ class MicroSocGymAction(Action):
     
 
 class MicroSocGymObservation(Observation):
-    logs: str
     reward: float
     done: bool
     success: bool
