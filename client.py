@@ -22,18 +22,15 @@ class MicroSocGymClient:
         self.session = requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
 
-
     def health(self) -> Dict[str, Any]:
         resp = self.session.get(f"{self.base_url}/health", timeout=self.timeout)
         resp.raise_for_status()
         return resp.json()
 
-
     def reset(self) -> Dict[str, Any]:
         resp = self.session.post(f"{self.base_url}/reset", timeout=self.timeout)
         resp.raise_for_status()
         return resp.json()
-
 
     def step(
         self,
@@ -60,20 +57,16 @@ class MicroSocGymClient:
         resp.raise_for_status()
         return resp.json()
 
-
     def state(self) -> Dict[str, Any]:
         resp = self.session.get(f"{self.base_url}/state", timeout=self.timeout)
         resp.raise_for_status()
         return resp.json()
 
-
     def close(self) -> None:
         self.session.close()
 
-
     def __enter__(self):
         return self
-
 
     def __exit__(self, *args):
         self.close()

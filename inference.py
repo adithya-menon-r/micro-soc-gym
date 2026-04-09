@@ -19,7 +19,7 @@ def extract_json(text: str) -> str:
     import json
     import re
 
-    match = re.search(r'```(?:json)?\s*(\{[\s\S]*?\})\s*```', text)
+    match = re.search(r"```(?:json)?\s*(\{[\s\S]*?\})\s*```", text)
     if match:
         candidate = match.group(1)
         try:
@@ -30,16 +30,16 @@ def extract_json(text: str) -> str:
 
     candidates = []
     for i, ch in enumerate(text):
-        if ch == '{':
+        if ch == "{":
             depth = 0
             for j, c in enumerate(text[i:], start=i):
-                if c == '{':
+                if c == "{":
                     depth += 1
-                elif c == '}':
+                elif c == "}":
                     depth -= 1
-                
+
                 if depth == 0:
-                    candidate = text[i:j+1]
+                    candidate = text[i : j + 1]
                     try:
                         json.loads(candidate)
                         candidates.append(candidate)
@@ -55,7 +55,7 @@ def extract_json(text: str) -> str:
 
 def main():
     client = OpenAI(api_key=HF_TOKEN, base_url=API_BASE_URL)
-    
+
     env_client = MicroSocGymClient(base_url="http://localhost:7860")
 
     for scenario_idx in range(len(SCENARIOS)):
@@ -63,18 +63,20 @@ def main():
 
         task_name = SCENARIOS[scenario_idx]
         benchmark = "micro-soc-gym"
-        
-        print(f"[START] task={task_name} env={benchmark} model={MODEL_NAME}", flush=True)
+
+        print(
+            f"[START] task={task_name} env={benchmark} model={MODEL_NAME}", flush=True
+        )
 
         step_idx = 0
         rewards: List[float] = []
         action_history: List[str] = []
         done = obs.get("done", False)
         success = obs.get("observation", {}).get("success", False)
-        
+
         while not done and step_idx < MAX_STEPS:
             step_idx += 1
-            
+
             system_prompt = (
                 "You are an expert Security Operations Center (SOC) analyst. "
                 "Your job is to investigate a web server logs and take exactly ONE remediation or investigative action per turn.\n\n"
@@ -89,19 +91,19 @@ def main():
                 "  block_ip(ip_address: str)\n"
                 "    - Adds an IP to the firewall blocklist.\n"
                 "    - Use when you see a single IP causing repeated suspicious traffic.\n"
-                "    - Requires field: \"ip_address\" (string)\n\n"
+                '    - Requires field: "ip_address" (string)\n\n'
                 "  kill_process(pid: int)\n"
                 "    - Sends SIGKILL to a running process by its PID.\n"
                 "    - Use when a process is actively running malicious commands.\n"
-                "    - The PID usually appears as a bracketed integer in the log user-agent field, e.g. \"AppleWebKit/537.36 [1234]\" means PID=1234.\n"
+                '    - The PID usually appears as a bracketed integer in the log user-agent field, e.g. "AppleWebKit/537.36 [1234]" means PID=1234.\n'
                 "    - Do NOT guess random PIDs.\n"
-                "    - Requires field: \"pid\" (integer)\n\n"
+                '    - Requires field: "pid" (integer)\n\n'
                 "  delete_file(file_path: str)\n"
                 "    - Permanently removes a file from the filesystem.\n"
                 "    - Use when a malicious file has been planted on the server.\n"
                 "    - Always use the FULL absolute filesystem path.\n"
                 "    - Access logs often show paths relative to the web server's document root. You must infer the absolute path based on standard Linux web server configurations.\n"
-                "    - Requires field: \"file_path\" (string)\n\n"
+                '    - Requires field: "file_path" (string)\n\n'
                 "Take one action per turn and continue until the threat is neutralised.\n\n"
                 "Output ONLY a single raw JSON object. No markdown fences, no explanation."
             )
@@ -123,30 +125,33 @@ def main():
             action_str = ""
             error_msg = "null"
             reward = 0.00
-            
+
             try:
                 response = client.chat.completions.create(
                     model=MODEL_NAME,
                     messages=[
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt}
+                        {"role": "user", "content": prompt},
                     ],
                     temperature=TEMPERATURE,
                 )
-                
+
                 raw_content = response.choices[0].message.content or ""
                 action_str = extract_json(raw_content)
-                
+
                 action_dict = json.loads(action_str)
                 action = MicroSocGymAction(**action_dict)
-                
+
                 action_kwargs = {"tool": action.tool}
-                if action.ip_address: action_kwargs["ip_address"] = action.ip_address
-                if action.file_path: action_kwargs["file_path"] = action.file_path
-                if action.pid is not None: action_kwargs["pid"] = action.pid
+                if action.ip_address:
+                    action_kwargs["ip_address"] = action.ip_address
+                if action.file_path:
+                    action_kwargs["file_path"] = action.file_path
+                if action.pid is not None:
+                    action_kwargs["pid"] = action.pid
 
                 obs = env_client.step(**action_kwargs)
-                
+
                 reward = obs.get("reward", 0.0)
                 rewards.append(reward)
                 done = obs.get("done", False)
@@ -154,23 +159,27 @@ def main():
                 inner_info = obs.get("observation", {}).get("info", "")
 
             except Exception as e:
-                error_msg = str(e).replace('\n', ' ')
+                error_msg = str(e).replace("\n", " ")
                 action_str = action_str or "{}"
                 reward = -1.0
                 rewards.append(reward)
                 done = True
 
-            action_log = action_str.replace('\n', '').replace('\r', '') if action_str else "{}"
-            
-            action_history.append(f"Step {step_idx}: Action: {action_log} -> Reward: {reward:.2f} | Information: {inner_info}")
-            
+            action_log = (
+                action_str.replace("\n", "").replace("\r", "") if action_str else "{}"
+            )
+
+            action_history.append(
+                f"Step {step_idx}: Action: {action_log} -> Reward: {reward:.2f} | Information: {inner_info}"
+            )
+
             print(
                 f"[STEP] step={step_idx} "
                 f"action={action_log} "
                 f"reward={reward:.2f} "
                 f"done={str(done).lower()} "
-                f"error={error_msg}", 
-                flush=True
+                f"error={error_msg}",
+                flush=True,
             )
 
         rewards_str = ",".join(f"{r:.2f}" for r in rewards) if rewards else "0.00"
@@ -181,7 +190,7 @@ def main():
             f"steps={step_idx} "
             f"score={score:.4f} "
             f"rewards={rewards_str}",
-            flush=True
+            flush=True,
         )
 
 

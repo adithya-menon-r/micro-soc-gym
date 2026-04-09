@@ -4,7 +4,13 @@ ACCESS_LOG_PATH = "/var/log/nginx/access.log"
 AUTH_LOG_PATH = "/var/log/auth.log"
 IP_BLOCKLIST_PATH = "/etc/nginx/blocklist.conf"
 WEBROOT_PATH = "/var/www/html"
-BACKDOOR_FILE_NAMES = ["backdoor.php", "shell.php", "cmd.php", "wp-config.php.bak", "admin_helper.php"]
+BACKDOOR_FILE_NAMES = [
+    "backdoor.php",
+    "shell.php",
+    "cmd.php",
+    "wp-config.php.bak",
+    "admin_helper.php",
+]
 
 MAX_STEPS = 8
 

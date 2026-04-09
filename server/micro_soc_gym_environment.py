@@ -23,7 +23,7 @@ from .constants import (
     CORRECT_ACTION_REWARD,
     PARTIAL_ACTION_REWARD,
     FATAL_ACTION_PENALTY,
-    WRONG_TOOL_PENALTY
+    WRONG_TOOL_PENALTY,
 )
 from .utils import (
     clear_file,
@@ -39,12 +39,10 @@ from .utils import (
 
 
 class MicroSocGymEnvironment(Environment):
-
     def __init__(self) -> None:
         super().__init__()
         self._scenario_index = 0
         self._state = MicroSocGymState()
-
 
     def _clear_previous_environment(self):
         clear_file(ACCESS_LOG_PATH)
@@ -66,13 +64,12 @@ class MicroSocGymEnvironment(Environment):
                 except Exception:
                     pass
 
-
     def _generate_scenario_attack_properties(self, scenario: str):
         self.attacker_ip = None
         self.normal_ips = []
         self.admin_ip = set()
         self.backdoor_file_name = None
-        
+
         with open("/tmp/micro_soc_state.env", "w") as f:
             if scenario == "easy":
                 self.attacker_ip = random_ip()
@@ -92,7 +89,6 @@ class MicroSocGymEnvironment(Environment):
                 f.write(f'ATTACKER_IP="{self.attacker_ip}"\n')
                 f.write(f'BACKDOOR_FILE_NAME="{self.backdoor_file_name}"\n')
 
-
     def reset(self) -> MicroSocGymObservation:
         scenario = SCENARIOS[self._scenario_index % len(SCENARIOS)]
         self._scenario_index += 1
@@ -105,7 +101,7 @@ class MicroSocGymEnvironment(Environment):
             threat_neutralised=False,
             investigated=False,
         )
-        
+
         self._last_tool = None
 
         self._clear_previous_environment()
@@ -120,7 +116,6 @@ class MicroSocGymEnvironment(Environment):
             success=False,
             info=f"Episode started. A threat has been detected. Analyse the logs and neutralise the threat.",
         )
-
 
     def step(self, action: MicroSocGymAction) -> MicroSocGymObservation:
         self._state.step_count += 1
@@ -147,7 +142,6 @@ class MicroSocGymEnvironment(Environment):
     def state(self) -> MicroSocGymState:
         return self._state
 
-
     def _calculate_reward(self, action: MicroSocGymAction, scenario: str):
         last_tool = getattr(self, "_last_tool", None)
         self._last_tool = action.tool
@@ -155,27 +149,46 @@ class MicroSocGymEnvironment(Environment):
         if action.tool == "read_access_log":
             self._state.investigated = True
             logs = read_logs(ACCESS_LOG_PATH)
-            
+
             if scenario in ["easy", "hard"]:
-                reward = 0.0 if last_tool == "read_access_log" else CORRECT_ACTION_REWARD
+                reward = (
+                    0.0 if last_tool == "read_access_log" else CORRECT_ACTION_REWARD
+                )
                 return reward, False, False, f"Here are the Access Logs:\n{logs}"
             else:
-                reward = 0.0 if last_tool == "read_access_log" else PARTIAL_ACTION_REWARD
-                return reward, False, False, f"Wrong logfile accessed.\nAccess Log:\n{logs}"
+                reward = (
+                    0.0 if last_tool == "read_access_log" else PARTIAL_ACTION_REWARD
+                )
+                return (
+                    reward,
+                    False,
+                    False,
+                    f"Wrong logfile accessed.\nAccess Log:\n{logs}",
+                )
 
         if action.tool == "read_auth_log":
             self._state.investigated = True
             logs = read_logs(AUTH_LOG_PATH)
-            
+
             if scenario == "medium":
                 reward = 0.0 if last_tool == "read_auth_log" else CORRECT_ACTION_REWARD
                 return reward, False, False, f"Here are the Auth Logs:\n{logs}"
             else:
                 reward = 0.0 if last_tool == "read_auth_log" else PARTIAL_ACTION_REWARD
-                return reward, False, False, f"Wrong logfile accessed.\nAuth Log:\n{logs}"
-        
+                return (
+                    reward,
+                    False,
+                    False,
+                    f"Wrong logfile accessed.\nAuth Log:\n{logs}",
+                )
+
         if not self._state.investigated:
-            return WRONG_TOOL_PENALTY, False, False, "You must investigate the logs first before taking remediation actions."
+            return (
+                WRONG_TOOL_PENALTY,
+                False,
+                False,
+                "You must investigate the logs first before taking remediation actions.",
+            )
 
         if scenario == "easy":
             reward, done, success, info = self._calculate_reward_easy(action)
@@ -184,39 +197,76 @@ class MicroSocGymEnvironment(Environment):
         elif scenario == "hard":
             reward, done, success, info = self._calculate_reward_hard(action)
         else:
-            reward, done, success, info = WRONG_TOOL_PENALTY, False, False, "Unknown scenario."
+            reward, done, success, info = (
+                WRONG_TOOL_PENALTY,
+                False,
+                False,
+                "Unknown scenario.",
+            )
 
         return reward, done, success, info
 
-
     def _calculate_reward_easy(self, action: MicroSocGymAction):
         if action.tool != "block_ip":
-            return WRONG_TOOL_PENALTY, False, False, "Wrong tool. Re-analyse the logs and identify the type of attack and choose the right tool."
+            return (
+                WRONG_TOOL_PENALTY,
+                False,
+                False,
+                "Wrong tool. Re-analyse the logs and identify the type of attack and choose the right tool.",
+            )
 
         ip = (action.ip_address or "").strip()
 
         if ip == self.attacker_ip:
             block_ip(ip)
-            return CORRECT_ACTION_REWARD, True, True, f"CORRECT! Attacker IP - {ip} is blocked. Threat neutralised."
+            return (
+                CORRECT_ACTION_REWARD,
+                True,
+                True,
+                f"CORRECT! Attacker IP - {ip} is blocked. Threat neutralised.",
+            )
 
-        return PARTIAL_ACTION_REWARD, False, False, f"Blocked {ip}, but that is not the attacker. Re-check the logs."
-
+        return (
+            PARTIAL_ACTION_REWARD,
+            False,
+            False,
+            f"Blocked {ip}, but that is not the attacker. Re-check the logs.",
+        )
 
     def _calculate_reward_medium(self, action: MicroSocGymAction):
         if action.tool != "block_ip":
-            return WRONG_TOOL_PENALTY, False, False, "Wrong tool. Re-analyse the logs and identify the type of attack and choose the right tool."
+            return (
+                WRONG_TOOL_PENALTY,
+                False,
+                False,
+                "Wrong tool. Re-analyse the logs and identify the type of attack and choose the right tool.",
+            )
 
         ip = (action.ip_address or "").strip()
 
         if ip in self.admin_ip:
-            return FATAL_ACTION_PENALTY, True, False, f"FATAL! {ip} is the admin IP and should not be blocked. Episode failed."
+            return (
+                FATAL_ACTION_PENALTY,
+                True,
+                False,
+                f"FATAL! {ip} is the admin IP and should not be blocked. Episode failed.",
+            )
 
         if ip == self.attacker_ip:
             block_ip(ip)
-            return CORRECT_ACTION_REWARD, True, True, f"CORRECT! Brute force attacker IP - {ip} is blocked. Threat neutralised."
+            return (
+                CORRECT_ACTION_REWARD,
+                True,
+                True,
+                f"CORRECT! Brute force attacker IP - {ip} is blocked. Threat neutralised.",
+            )
 
-        return PARTIAL_ACTION_REWARD, False, False, f"Blocked {ip}, but that is not the attacker. Re-check the logs."
-
+        return (
+            PARTIAL_ACTION_REWARD,
+            False,
+            False,
+            f"Blocked {ip}, but that is not the attacker. Re-check the logs.",
+        )
 
     def _calculate_reward_hard(self, action: MicroSocGymAction):
         backdoor_path = os.path.join(WEBROOT_PATH, self.backdoor_file_name)
@@ -224,34 +274,74 @@ class MicroSocGymEnvironment(Environment):
 
         if action.tool == "block_ip":
             ip = (action.ip_address or "").strip()
-            
+
             if is_ip_blocked(ip):
-                return WRONG_TOOL_PENALTY, False, False, f"IP {ip} is already blocked. Re-check the logs for other indicators of compromise and choose the right action."
-                
+                return (
+                    WRONG_TOOL_PENALTY,
+                    False,
+                    False,
+                    f"IP {ip} is already blocked. Re-check the logs for other indicators of compromise and choose the right action.",
+                )
+
             if ip == self.attacker_ip:
                 block_ip(ip)
-                
-                done = not os.path.exists(backdoor_path) and not check_hard_attack_process()
-                return CORRECT_ACTION_REWARD, done, done, f"CORRECT! Attacker IP - {ip} is blocked. {'Threat neutralised.' if done else 'Threat still active, check for other indicators of compromise and choose the right action.'}"
-            
-            return PARTIAL_ACTION_REWARD, False, False, f"Wrong IP {ip} blocked. Re-check the logs and choose the right IP."
+
+                done = (
+                    not os.path.exists(backdoor_path)
+                    and not check_hard_attack_process()
+                )
+                return (
+                    CORRECT_ACTION_REWARD,
+                    done,
+                    done,
+                    f"CORRECT! Attacker IP - {ip} is blocked. {'Threat neutralised.' if done else 'Threat still active, check for other indicators of compromise and choose the right action.'}",
+                )
+
+            return (
+                PARTIAL_ACTION_REWARD,
+                False,
+                False,
+                f"Wrong IP {ip} blocked. Re-check the logs and choose the right IP.",
+            )
 
         elif action.tool == "kill_process":
             pid = action.pid
 
             if pid is None:
-                return WRONG_TOOL_PENALTY, False, False, "No PID provided to kill_process."
+                return (
+                    WRONG_TOOL_PENALTY,
+                    False,
+                    False,
+                    "No PID provided to kill_process.",
+                )
 
             killed = kill_process(pid)
 
             if killed:
                 if not check_hard_attack_process():
-                    done = not os.path.exists(backdoor_path) and is_ip_blocked(self.attacker_ip)
-                    return CORRECT_ACTION_REWARD, done, done, f"CORRECT! PID {pid} is killed. {'Threat neutralised.' if done else 'Threat still active, check for other indicators of compromise and choose the right action.'}"
+                    done = not os.path.exists(backdoor_path) and is_ip_blocked(
+                        self.attacker_ip
+                    )
+                    return (
+                        CORRECT_ACTION_REWARD,
+                        done,
+                        done,
+                        f"CORRECT! PID {pid} is killed. {'Threat neutralised.' if done else 'Threat still active, check for other indicators of compromise and choose the right action.'}",
+                    )
                 else:
-                    return WRONG_TOOL_PENALTY, False, False, f"Process {pid} killed, but it was not the malicious process. Re-check the logs and choose the right action."
+                    return (
+                        WRONG_TOOL_PENALTY,
+                        False,
+                        False,
+                        f"Process {pid} killed, but it was not the malicious process. Re-check the logs and choose the right action.",
+                    )
             else:
-                return WRONG_TOOL_PENALTY, False, False, f"Process {pid} may already be dead or not found or could not be killed."
+                return (
+                    WRONG_TOOL_PENALTY,
+                    False,
+                    False,
+                    f"Process {pid} may already be dead or not found or could not be killed.",
+                )
 
         elif action.tool == "delete_file":
             path = (action.file_path or "").strip()
@@ -259,18 +349,39 @@ class MicroSocGymEnvironment(Environment):
             if path == backdoor_path and backdoor_exists:
                 os.remove(backdoor_path)
                 self._file_deleted = True
-                
-                done = not check_hard_attack_process() and is_ip_blocked(self.attacker_ip)
 
-                return CORRECT_ACTION_REWARD, done, done, f"CORRECT! Backdoor file {path} deleted. {'Threat neutralised.' if done else 'Threat still active, check for other indicators of compromise and choose the right action.'}"
+                done = not check_hard_attack_process() and is_ip_blocked(
+                    self.attacker_ip
+                )
+
+                return (
+                    CORRECT_ACTION_REWARD,
+                    done,
+                    done,
+                    f"CORRECT! Backdoor file {path} deleted. {'Threat neutralised.' if done else 'Threat still active, check for other indicators of compromise and choose the right action.'}",
+                )
             elif not backdoor_exists and path == backdoor_path:
-                return WRONG_TOOL_PENALTY, False, False, "Backdoor file not found or already deleted."
+                return (
+                    WRONG_TOOL_PENALTY,
+                    False,
+                    False,
+                    "Backdoor file not found or already deleted.",
+                )
             else:
-                return WRONG_TOOL_PENALTY, False, False, "Wrong file deleted. Re-check the logs and identify the right file to delete."
+                return (
+                    WRONG_TOOL_PENALTY,
+                    False,
+                    False,
+                    "Wrong file deleted. Re-check the logs and identify the right file to delete.",
+                )
 
         else:
-            return WRONG_TOOL_PENALTY, False, False, "Re-analyse the logs and identify the type of attack and choose the right tool."
-
+            return (
+                WRONG_TOOL_PENALTY,
+                False,
+                False,
+                "Re-analyse the logs and identify the type of attack and choose the right tool.",
+            )
 
     def grade_episode(self, scenario: str) -> float:
         score = 0.0
@@ -285,15 +396,15 @@ class MicroSocGymEnvironment(Environment):
 
         elif scenario == "hard":
             backdoor_file = self.backdoor_file_name
-            
+
             if is_ip_blocked(self.attacker_ip):
                 score += 0.33
-                
+
             if backdoor_file:
                 path = os.path.join(WEBROOT_PATH, backdoor_file)
                 if not os.path.exists(path):
                     score += 0.33
-                    
+
             if not check_hard_attack_process():
                 score += 0.33
 

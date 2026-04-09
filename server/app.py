@@ -60,17 +60,17 @@ app = create_app(
 # ---------------------------------------------------------------------------
 
 SCENARIO_COLORS = {
-    "easy":   "#22c55e",
+    "easy": "#22c55e",
     "medium": "#f59e0b",
-    "hard":   "#ef4444",
-    "":       "#6b7280",
+    "hard": "#ef4444",
+    "": "#6b7280",
 }
 
 SCENARIO_LABELS = {
-    "easy":   "EASY - Noisy Scanner",
+    "easy": "EASY - Noisy Scanner",
     "medium": "MEDIUM - Brute Force",
-    "hard":   "HARD - Webshell C2",
-    "":       "⬜ Not Started",
+    "hard": "HARD - Webshell C2",
+    "": "⬜ Not Started",
 }
 
 SCENARIO_DESCRIPTIONS = {
@@ -112,7 +112,7 @@ def _scenario_badge(scenario: str) -> str:
     label = SCENARIO_LABELS.get(scenario, scenario)
     return (
         f'<div style="display:inline-block;padding:6px 16px;border-radius:20px;'
-        f'background:{color}22;border:2px solid {color};color:{color};'
+        f"background:{color}22;border:2px solid {color};color:{color};"
         f'font-weight:700;font-size:15px;font-family:monospace;">{label}</div>'
     )
 
@@ -120,12 +120,12 @@ def _scenario_badge(scenario: str) -> str:
 def _scenario_info_html(scenario: str) -> str:
     color = SCENARIO_COLORS.get(scenario, "#6b7280")
     label = SCENARIO_LABELS.get(scenario, "Not Started")
-    desc  = SCENARIO_DESCRIPTIONS.get(scenario, "")
+    desc = SCENARIO_DESCRIPTIONS.get(scenario, "")
     return (
         f'<div style="background:#1e293b;border:1px solid {color}44;border-left:4px solid {color};'
         f'border-radius:8px;padding:14px 18px;font-family:monospace;font-size:13px;line-height:1.7;color:#e2e8f0;">'
         f'<div style="color:{color};font-weight:800;font-size:14px;margin-bottom:8px;">{label}</div>'
-        f'{desc}</div>'
+        f"{desc}</div>"
     )
 
 
@@ -146,7 +146,7 @@ def _action_history_html(history: list) -> str:
             f'<td style="padding:6px 10px;color:#cbd5e1;">{entry["param"]}</td>'
             f'<td style="padding:6px 10px;color:{r_color};font-weight:700;">{entry["reward"]:+.1f}</td>'
             f'<td style="padding:6px 10px;">{icon} {entry["result"]}</td>'
-            f'</tr>'
+            f"</tr>"
         )
     return (
         '<table style="width:100%;border-collapse:collapse;font-family:monospace;font-size:12px;">'
@@ -156,8 +156,8 @@ def _action_history_html(history: list) -> str:
         '<th style="text-align:left;padding:6px 10px;color:#64748b;">Parameter</th>'
         '<th style="text-align:left;padding:6px 10px;color:#64748b;">Reward</th>'
         '<th style="text-align:left;padding:6px 10px;color:#64748b;">Result</th>'
-        '</tr></thead>'
-        f'<tbody>{rows}</tbody></table>'
+        "</tr></thead>"
+        f"<tbody>{rows}</tbody></table>"
     )
 
 
@@ -167,23 +167,23 @@ def _outcome_banner_html(done: bool, success: bool, total_reward: float) -> str:
         return (
             f'<div style="background:#1e293b;border:1px solid #334155;border-radius:8px;'
             f'padding:12px 18px;font-family:monospace;font-size:13px;color:#94a3b8;">'
-            f'🔄 {steps_left}</div>'
+            f"🔄 {steps_left}</div>"
         )
     if success:
         return (
             '<div style="background:#14532d;border:2px solid #22c55e;border-radius:8px;'
             'padding:16px 20px;font-family:monospace;font-size:15px;font-weight:700;color:#86efac;">'
-            f'THREAT NEUTRALISED. Episode complete! Total reward: {total_reward:+.1f}<br>'
+            f"THREAT NEUTRALISED. Episode complete! Total reward: {total_reward:+.1f}<br>"
             '<span style="font-size:12px;font-weight:400;color:#4ade80;">'
-            'Click ⟳ Reset to start the next scenario.</span></div>'
+            "Click ⟳ Reset to start the next scenario.</span></div>"
         )
     else:
         return (
             '<div style="background:#450a0a;border:2px solid #ef4444;border-radius:8px;'
             'padding:16px 20px;font-family:monospace;font-size:15px;font-weight:700;color:#fca5a5;">'
-            f'EPISODE FAILED. Total reward: {total_reward:+.1f}<br>'
+            f"EPISODE FAILED. Total reward: {total_reward:+.1f}<br>"
             '<span style="font-size:12px;font-weight:400;color:#f87171;">'
-            'A false positive or timeout ended the episode. Click ⟳ Reset to try again.</span></div>'
+            "A false positive or timeout ended the episode. Click ⟳ Reset to try again.</span></div>"
         )
 
 
@@ -191,7 +191,7 @@ def _make_reward_plot(history: List[Tuple[int, float]]):
     if not history:
         return '<div style="color:#9ca3af;font-style:italic;padding:20px 0;">No reward data yet. Start an episode.</div>'
 
-    steps  = [h[0] for h in history]
+    steps = [h[0] for h in history]
     values = [h[1] for h in history]
     min_v, max_v = min(values), max(values)
     rng = max(max_v - min_v, 1.0)
@@ -211,7 +211,7 @@ def _make_reward_plot(history: List[Tuple[int, float]]):
     svg = (
         f'<svg viewBox="0 0 {W} {H}" xmlns="http://www.w3.org/2000/svg" '
         f'style="width:100%;background:#0f172a;border-radius:8px;">'
-        f'<line x1="{pad}" y1="{sy(0):.1f}" x2="{W-pad}" y2="{sy(0):.1f}" '
+        f'<line x1="{pad}" y1="{sy(0):.1f}" x2="{W - pad}" y2="{sy(0):.1f}" '
         f'stroke="#334155" stroke-width="1" stroke-dasharray="4 4"/>'
         f'<polyline points="{pts}" fill="none" stroke="{stroke}" stroke-width="2.5" '
         f'stroke-linejoin="round" stroke-linecap="round"/>'
@@ -219,10 +219,10 @@ def _make_reward_plot(history: List[Tuple[int, float]]):
             f'<circle cx="{sx(i):.1f}" cy="{sy(v):.1f}" r="3.5" fill="{stroke}"/>'
             for i, v in enumerate(values)
         )
-        + f'<text x="{pad}" y="{H-2}" fill="#94a3b8" font-size="10" font-family="monospace">step 0</text>'
-        f'<text x="{W-pad}" y="{H-2}" fill="#94a3b8" font-size="10" font-family="monospace" text-anchor="end">step {steps[-1]}</text>'
+        + f'<text x="{pad}" y="{H - 2}" fill="#94a3b8" font-size="10" font-family="monospace">step 0</text>'
+        f'<text x="{W - pad}" y="{H - 2}" fill="#94a3b8" font-size="10" font-family="monospace" text-anchor="end">step {steps[-1]}</text>'
         f'<text x="{pad}" y="14" fill="#94a3b8" font-size="10" font-family="monospace">{max_v:+.1f}</text>'
-        f'<text x="{pad}" y="{H-14}" fill="#94a3b8" font-size="10" font-family="monospace">{min_v:+.1f}</text>'
+        f'<text x="{pad}" y="{H - 14}" fill="#94a3b8" font-size="10" font-family="monospace">{min_v:+.1f}</text>'
         f"</svg>"
     )
     return svg
@@ -231,6 +231,7 @@ def _make_reward_plot(history: List[Tuple[int, float]]):
 # ---------------------------------------------------------------------------
 # Gradio event handlers - all operate on _env_singleton directly
 # ---------------------------------------------------------------------------
+
 
 def handle_reset():
     global _reward_history, _action_history, _last_feedback
@@ -241,16 +242,26 @@ def handle_reset():
     state = _env_singleton.state
     _last_feedback = obs.info
 
-    badge        = _scenario_badge(state.scenario)
+    badge = _scenario_badge(state.scenario)
     scenario_info = _scenario_info_html(state.scenario)
-    logs         = obs.logs
-    steps        = f"{state.step_count} / 8"
-    reward       = f"{state.total_reward:+.1f}"
-    action_hist  = _action_history_html(_action_history)
-    outcome      = _outcome_banner_html(obs.done, obs.success, state.total_reward)
-    plot         = _make_reward_plot(_reward_history)
+    logs = obs.logs
+    steps = f"{state.step_count} / 8"
+    reward = f"{state.total_reward:+.1f}"
+    action_hist = _action_history_html(_action_history)
+    outcome = _outcome_banner_html(obs.done, obs.success, state.total_reward)
+    plot = _make_reward_plot(_reward_history)
 
-    return badge, scenario_info, logs, steps, reward, action_hist, outcome, plot, gr.update(interactive=True)
+    return (
+        badge,
+        scenario_info,
+        logs,
+        steps,
+        reward,
+        action_hist,
+        outcome,
+        plot,
+        gr.update(interactive=True),
+    )
 
 
 def handle_step(tool: str, ip_address: str, file_path: str, pid_str: str):
@@ -258,8 +269,8 @@ def handle_step(tool: str, ip_address: str, file_path: str, pid_str: str):
 
     # Gradio passes None for hidden/empty textboxes - coerce to str first
     ip_address = (ip_address or "").strip()
-    file_path  = (file_path  or "").strip()
-    pid_str    = (pid_str    or "").strip()
+    file_path = (file_path or "").strip()
+    pid_str = (pid_str or "").strip()
 
     pid: int | None = None
     if pid_str:
@@ -285,33 +296,45 @@ def handle_step(tool: str, ip_address: str, file_path: str, pid_str: str):
     if tool == "block_ip":
         param_str = ip_address.strip() or "(none)"
     elif tool == "delete_file":
-        param_str = (action.file_path or "(none)")
+        param_str = action.file_path or "(none)"
     elif tool == "kill_process":
         param_str = str(pid) if pid is not None else "(none)"
     else:
         param_str = ""
 
-    _action_history.append({
-        "step":    state.step_count,
-        "tool":    tool,
-        "param":   param_str,
-        "reward":  obs.reward,
-        "result":  obs.info[:80] + ("..." if len(obs.info) > 80 else ""),
-        "success": obs.success,
-    })
+    _action_history.append(
+        {
+            "step": state.step_count,
+            "tool": tool,
+            "param": param_str,
+            "reward": obs.reward,
+            "result": obs.info[:80] + ("..." if len(obs.info) > 80 else ""),
+            "success": obs.success,
+        }
+    )
 
-    badge        = _scenario_badge(state.scenario)
+    badge = _scenario_badge(state.scenario)
     scenario_info = _scenario_info_html(state.scenario)
-    logs         = obs.logs
-    steps        = f"{state.step_count} / 8"
-    reward       = f"{state.total_reward:+.1f}"
-    action_hist  = _action_history_html(_action_history)
-    outcome      = _outcome_banner_html(obs.done, obs.success, state.total_reward)
-    plot         = _make_reward_plot(_reward_history)
+    logs = obs.logs
+    steps = f"{state.step_count} / 8"
+    reward = f"{state.total_reward:+.1f}"
+    action_hist = _action_history_html(_action_history)
+    outcome = _outcome_banner_html(obs.done, obs.success, state.total_reward)
+    plot = _make_reward_plot(_reward_history)
 
     step_btn = gr.update(interactive=not obs.done)
 
-    return badge, scenario_info, logs, steps, reward, action_hist, outcome, plot, step_btn
+    return (
+        badge,
+        scenario_info,
+        logs,
+        steps,
+        reward,
+        action_hist,
+        outcome,
+        plot,
+        step_btn,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -349,7 +372,6 @@ HEAD = """
 
 def build_gradio_ui() -> gr.Blocks:
     with gr.Blocks(css=CSS, head=HEAD, title="Micro-SOC Gym") as demo:
-
         # Title
         gr.HTML("""
         <div style="text-align:center;padding:32px 0 12px;">
@@ -365,19 +387,22 @@ def build_gradio_ui() -> gr.Blocks:
             with gr.Column(scale=3):
                 scenario_badge = gr.HTML(_scenario_badge(""))
             with gr.Column(scale=1):
-                reset_btn = gr.Button("⟳  Reset / New Episode", elem_classes="btn-reset", size="lg")
+                reset_btn = gr.Button(
+                    "⟳  Reset / New Episode", elem_classes="btn-reset", size="lg"
+                )
 
         # Scenario info panel (what is the threat + what action to take)
         scenario_info = gr.HTML(_scenario_info_html(""))
 
         # Main two-column layout
         with gr.Row():
-
             # Left - log viewer
             with gr.Column(scale=3, elem_classes="panel"):
-                gr.HTML('<p style="color:#94a3b8;font-size:13px;margin:0 0 8px;font-family:monospace;">'
-                        'LOG STREAM '
-                        '<span style="color:#475569;font-weight:400;">- The raw log file the agent must analyse</span></p>')
+                gr.HTML(
+                    '<p style="color:#94a3b8;font-size:13px;margin:0 0 8px;font-family:monospace;">'
+                    "LOG STREAM "
+                    '<span style="color:#475569;font-weight:400;">- The raw log file the agent must analyse</span></p>'
+                )
                 log_output = gr.Textbox(
                     show_label=False,
                     container=False,
@@ -390,8 +415,9 @@ def build_gradio_ui() -> gr.Blocks:
 
             # Right - Controls + stats
             with gr.Column(scale=2, elem_classes="panel"):
-
-                gr.HTML('<p style="color:#94a3b8;font-size:13px;margin:0 0 12px;font-family:monospace;">EPISODE STATS</p>')
+                gr.HTML(
+                    '<p style="color:#94a3b8;font-size:13px;margin:0 0 12px;font-family:monospace;">EPISODE STATS</p>'
+                )
                 with gr.Row():
                     steps_box = gr.Textbox(
                         value="0 / 8",
@@ -409,7 +435,9 @@ def build_gradio_ui() -> gr.Blocks:
                     )
 
                 gr.HTML('<hr style="border-color:#334155;margin:16px 0;">')
-                gr.HTML('<p style="color:#94a3b8;font-size:13px;margin:0 0 8px;font-family:monospace;">AGENT ACTION</p>')
+                gr.HTML(
+                    '<p style="color:#94a3b8;font-size:13px;margin:0 0 8px;font-family:monospace;">AGENT ACTION</p>'
+                )
 
                 tool_dropdown = gr.Dropdown(
                     choices=["block_ip", "delete_file", "kill_process"],
@@ -446,15 +474,19 @@ def build_gradio_ui() -> gr.Blocks:
         # Action history
         with gr.Row():
             with gr.Column(elem_classes="panel"):
-                gr.HTML('<p style="color:#94a3b8;font-size:13px;margin:0 0 10px;font-family:monospace;">'
-                        'ACTION HISTORY '
-                        '<span style="color:#475569;font-weight:400;">- Every action the agent took this episode</span></p>')
+                gr.HTML(
+                    '<p style="color:#94a3b8;font-size:13px;margin:0 0 10px;font-family:monospace;">'
+                    "ACTION HISTORY "
+                    '<span style="color:#475569;font-weight:400;">- Every action the agent took this episode</span></p>'
+                )
                 action_history_html = gr.HTML(_action_history_html([]))
 
         # Reward curve
         with gr.Row():
             with gr.Column(elem_classes="panel"):
-                gr.HTML('<p style="color:#94a3b8;font-size:13px;margin:0 0 12px;font-family:monospace;">CUMULATIVE REWARD CURVE</p>')
+                gr.HTML(
+                    '<p style="color:#94a3b8;font-size:13px;margin:0 0 12px;font-family:monospace;">CUMULATIVE REWARD CURVE</p>'
+                )
                 reward_chart = gr.HTML(_make_reward_plot([]))
 
         # Scenario reference table
@@ -501,8 +533,15 @@ def build_gradio_ui() -> gr.Blocks:
 
         # Wiring
         _ui_outputs = [
-            scenario_badge, scenario_info, log_output, steps_box, reward_box,
-            action_history_html, outcome_banner, reward_chart, step_btn,
+            scenario_badge,
+            scenario_info,
+            log_output,
+            steps_box,
+            reward_box,
+            action_history_html,
+            outcome_banner,
+            reward_chart,
+            step_btn,
         ]
 
         reset_btn.click(
@@ -517,8 +556,6 @@ def build_gradio_ui() -> gr.Blocks:
             outputs=_ui_outputs,
         )
 
-
-
     return demo
 
 
@@ -529,6 +566,7 @@ app = gr.mount_gradio_app(app, gradio_ui, path="/")
 
 def main():
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=7860)
 
 
