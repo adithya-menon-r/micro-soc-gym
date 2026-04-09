@@ -77,8 +77,15 @@ def main():
             
             system_prompt = (
                 "You are an expert Security Operations Center (SOC) analyst. "
-                "Your job is to investigate a web server logs and take exactly ONE remediation action per turn.\n\n"
+                "Your job is to investigate a web server logs and take exactly ONE remediation or investigative action per turn.\n\n"
+                "Always use investigative tools like `read_access_log` and `read_auth_log` FIRST to gather evidence before attempting any remediations.\n\n"
                 "Available tools and their descriptions:\n\n"
+                "  read_access_log()\n"
+                "    - Reads the web server access log.\n"
+                "    - Use to investigate potential web-based attacks.\n\n"
+                "  read_auth_log()\n"
+                "    - Reads the system authentication log.\n"
+                "    - Use to investigate potential brute-force or unauthorized login attempts.\n\n"
                 "  block_ip(ip_address: str)\n"
                 "    - Adds an IP to the firewall blocklist.\n"
                 "    - Use when you see a single IP causing repeated suspicious traffic.\n"
@@ -106,6 +113,8 @@ def main():
                 f"Action History:\n{action_history_str}\n\n"
                 f"Total Reward So Far: {current_total_reward:.2f}\n\n"
                 f"Choose the single best action. Output ONLY valid JSON, one of:\n"
+                f'  {{"tool": "read_access_log"}}\n'
+                f'  {{"tool": "read_auth_log"}}\n'
                 f'  {{"tool": "block_ip", "ip_address": "<ip>"}}\n'
                 f'  {{"tool": "delete_file", "file_path": "<absolute_path>"}}\n'
                 f'  {{"tool": "kill_process", "pid": <integer>}}\n'

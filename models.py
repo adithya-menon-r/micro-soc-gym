@@ -9,7 +9,7 @@ from openenv.core.env_server import Action, Observation, State
 
 
 class MicroSocGymAction(Action):
-    tool: Literal["block_ip", "delete_file", "kill_process"]
+    tool: Literal["block_ip", "delete_file", "kill_process", "read_access_log", "read_auth_log"]
     ip_address: Optional[str] = None
     file_path: Optional[str] = None
     pid: Optional[int] = None
@@ -29,3 +29,4 @@ class MicroSocGymState(State):
     scenario: str = ""
     total_reward: float = 0.0
     threat_neutralised: bool = False
+    investigated: bool = False

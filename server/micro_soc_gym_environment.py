@@ -34,6 +34,7 @@ from .utils import (
     is_ip_blocked,
     check_hard_attack_process,
     random_ip,
+    read_logs,
 )
 
 
@@ -100,6 +101,7 @@ class MicroSocGymEnvironment(Environment):
             scenario=scenario,
             total_reward=0.0,
             threat_neutralised=False,
+            investigated=False,
         )
 
         self._clear_previous_environment()
@@ -143,6 +145,27 @@ class MicroSocGymEnvironment(Environment):
 
 
     def _calculate_reward(self, action: MicroSocGymAction, scenario: str):
+        if action.tool == "read_access_log":
+            self._state.investigated = True
+            logs = read_logs(ACCESS_LOG_PATH)
+            
+            if scenario in ["easy", "hard"]:
+                return CORRECT_ACTION_REWARD, False, False, f"Here are the Access Logs:\n{logs}"
+            else:
+                return PARTIAL_ACTION_REWARD, False, False, f"Wrong logfile accessed.\nAccess Log:\n{logs}"
+
+        if action.tool == "read_auth_log":
+            self._state.investigated = True
+            logs = read_logs(AUTH_LOG_PATH)
+            
+            if scenario == "medium":
+                return CORRECT_ACTION_REWARD, False, False, f"Here are the Auth Logs:\n{logs}"
+            else:
+                return PARTIAL_ACTION_REWARD, False, False, f"Wrong logfile accessed.\nAuth Log:\n{logs}"
+        
+        if not self._state.investigated:
+            return WRONG_TOOL_PENALTY, False, False, "You must investigate the logs first before taking remediation actions."
+
         if scenario == "easy":
             reward, done, success, info = self._calculate_reward_easy(action)
         elif scenario == "medium":
