@@ -156,9 +156,9 @@ def main():
             except Exception as e:
                 error_msg = str(e).replace('\n', ' ')
                 action_str = action_str or "{}"
-                reward = 0.0
+                reward = -1.0
                 rewards.append(reward)
-                done = False
+                done = True
 
             action_log = action_str.replace('\n', '').replace('\r', '') if action_str else "{}"
             
