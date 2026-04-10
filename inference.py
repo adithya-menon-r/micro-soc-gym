@@ -82,33 +82,37 @@ def main():
             step_idx += 1
 
             system_prompt = (
-                "You are an expert Security Operations Center (SOC) analyst. "
-                "Your job is to investigate a web server logs and take exactly ONE remediation or investigative action per turn.\n\n"
-                "Always use investigative tools like `read_access_log` and `read_auth_log` FIRST to gather evidence before attempting any remediations.\n\n"
-                "Available tools and their descriptions:\n\n"
+                "You are an expert Security Operations Center (SOC) analyst."
+                "Your job is to investigate web server logs and take exactly ONE action per turn until the threat is neutralised.\n\n"
+
+                "BEFORE ACTING - CHECK YOUR HISTORY FIRST:\n"
+                "The action history contains the full output and feedback of all previous actions including logs."
+                "If logs have already been read, do NOT read them again - extract the evidence you need directly from action history. "
+                "Only read a log if it has not been read yet in this episode.\n\n"
+
+                "Available tools:\n\n"
                 "  read_access_log()\n"
                 "    - Reads the web server access log.\n"
-                "    - Use to investigate potential web-based attacks.\n\n"
+                "    - Use ONCE to investigate potential web-based attacks.\n\n"
                 "  read_auth_log()\n"
                 "    - Reads the system authentication log.\n"
-                "    - Use to investigate potential brute-force or unauthorized login attempts.\n\n"
+                "    - Use ONCE to investigate potential brute-force or unauthorized login attempts.\n\n"
                 "  block_ip(ip_address: str)\n"
                 "    - Adds an IP to the firewall blocklist.\n"
                 "    - Use when you see a single IP causing repeated suspicious traffic.\n"
                 '    - Requires field: "ip_address" (string)\n\n'
                 "  kill_process(pid: int)\n"
                 "    - Sends SIGKILL to a running process by its PID.\n"
-                "    - Use when a process is actively running malicious commands.\n"
-                '    - The PID usually appears as a bracketed integer in the log user-agent field, e.g. "AppleWebKit/537.36 [1234]" means PID=1234.\n'
-                "    - Do NOT guess random PIDs.\n"
+                "    - Use when a process is actively running malicious commands from within the server.\n"
+                '    - The PID appears as a bracketed integer in the user-agent field, e.g. "AppleWebKit/537.36 [1234]" means PID=1234.\n'
+                "    - Extract the PID from the logs. Do NOT guess.\n"
                 '    - Requires field: "pid" (integer)\n\n'
                 "  delete_file(file_path: str)\n"
                 "    - Permanently removes a file from the filesystem.\n"
                 "    - Use when a malicious file has been planted on the server.\n"
-                "    - Always use the FULL absolute filesystem path.\n"
-                "    - Access logs often show paths relative to the web server's document root. You must infer the absolute path based on standard Linux web server configurations.\n"
+                "    - Always use the FULL absolute path e.g. /var/www/html/shell.php.\n"
                 '    - Requires field: "file_path" (string)\n\n'
-                "Take one action per turn and continue until the threat is neutralised.\n\n"
+
                 "Output ONLY a single raw JSON object. No markdown fences, no explanation."
             )
 
@@ -122,8 +126,8 @@ def main():
                 f'  {{"tool": "read_access_log"}}\n'
                 f'  {{"tool": "read_auth_log"}}\n'
                 f'  {{"tool": "block_ip", "ip_address": "<ip>"}}\n'
-                f'  {{"tool": "delete_file", "file_path": "<absolute_path>"}}\n'
                 f'  {{"tool": "kill_process", "pid": <integer>}}\n'
+                f'  {{"tool": "delete_file", "file_path": "<absolute_path>"}}\n'
             )
 
             action_str = ""
