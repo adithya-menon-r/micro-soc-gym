@@ -195,7 +195,7 @@ def main():
         print(
             f"[END] success={str(success).lower()} "
             f"steps={step_idx} "
-            f"score={score:.4f} "
+            f"score={score:.2f} "
             f"rewards={rewards_str}",
             flush=True,
         )
