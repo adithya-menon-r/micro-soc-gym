@@ -19,6 +19,7 @@ from server.constants import (
     IP_BLOCKLIST_PATH,
     WEBROOT_PATH,
     BACKDOOR_FILE_NAMES,
+    HARD_ATTACK_FLAG_FILE_PATH,
     MAX_STEPS,
     CORRECT_ACTION_REWARD,
     PARTIAL_ACTION_REWARD,
@@ -56,9 +57,15 @@ class MicroSocGymEnvironment(Environment):
             except Exception:
                 pass
 
-        if os.path.exists("/tmp/.hard_attack_active"):
+        if os.path.exists(HARD_ATTACK_FLAG_FILE_PATH):
             try:
-                os.remove("/tmp/.hard_attack_active")
+                os.remove(HARD_ATTACK_FLAG_FILE_PATH)
+            except Exception:
+                pass
+
+        if os.path.exists("/tmp/.hard_attack_pid"):
+            try:
+                os.remove("/tmp/.hard_attack_pid")
             except Exception:
                 pass
 
@@ -460,6 +467,14 @@ class MicroSocGymEnvironment(Environment):
                 score = 0.99
 
         elif scenario == "hard":
+            ip_blocked = is_ip_blocked(self.attacker_ip)
+            backdoor_path = os.path.join(WEBROOT_PATH, self.backdoor_file_name)
+            backdoor_exists = os.path.exists(backdoor_path)
+            process_alive = check_hard_attack_process()
+            flag_exists = os.path.exists(HARD_ATTACK_FLAG_FILE_PATH)
+            
+            print(f"[GRADE] ip_blocked={ip_blocked} backdoor_exists={backdoor_exists} process_alive={process_alive} flag_exists={flag_exists}", flush=True)
+
             backdoor_file = self.backdoor_file_name
 
             if is_ip_blocked(self.attacker_ip):

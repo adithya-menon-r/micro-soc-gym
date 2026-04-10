@@ -12,6 +12,9 @@ BACKDOOR_FILE_NAMES = [
     "admin_helper.php",
 ]
 
+PID_FILE_PATH = "/tmp/.hard_attack_pid"
+HARD_ATTACK_FLAG_FILE_PATH = "/tmp/.hard_attack_active"
+
 MAX_STEPS = 8
 
 CORRECT_ACTION_REWARD = 0.50

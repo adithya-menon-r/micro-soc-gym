@@ -2,7 +2,7 @@ import os
 import time
 import subprocess
 import random
-from server.constants import IP_BLOCKLIST_PATH
+from server.constants import IP_BLOCKLIST_PATH, PID_FILE_PATH
 
 
 def random_ip():
@@ -70,6 +70,15 @@ def kill_process(pid: int) -> bool:
 
         try:
             os.kill(pid, signal.SIGKILL)
+            
+            if os.path.exists(PID_FILE_PATH):
+                try:
+                    with open(PID_FILE_PATH) as f:
+                        stored = int(f.read().strip())
+                    if stored == pid:
+                        os.remove(PID_FILE_PATH)
+                except Exception:
+                    pass
         except ProcessLookupError:
             pass
 
@@ -99,5 +108,13 @@ def read_logs(file_path: str) -> str:
         return "(could not read log file)"
 
 
-def check_hard_attack_process() -> bool:
-    return os.path.exists("/tmp/.hard_attack_active")
+def check_hard_attack_process():
+    if not os.path.exists(PID_FILE_PATH):
+        return False
+    with open(PID_FILE_PATH) as f:
+        pid = int(f.read().strip())
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
