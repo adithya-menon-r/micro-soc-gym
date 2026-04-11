@@ -40,7 +40,7 @@ from server.utils import (
 )
 
 
-# Environment class for micro-sosc-gym
+# Environment class for micro-soc-gym
 class MicroSocGymEnvironment(Environment):
     def __init__(self) -> None:
         super().__init__()

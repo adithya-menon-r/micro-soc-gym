@@ -20,7 +20,7 @@ class MicroSocGymObservation(Observation):
     reward: float # Reward given for a step (can be -ve/0/+ve)
     done: bool # Marks if the episode has ended or not
     success: bool # Marks if agent succeeded in neutralising threat
-    info: str # Feedback or Information returned from teh envrionment for a step
+    info: str # Feedback or Information returned from the envrionment for a step
 
 
 class MicroSocGymState(State):
