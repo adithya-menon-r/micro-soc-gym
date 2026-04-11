@@ -215,7 +215,7 @@ class MicroSocGymEnvironment(Environment):
                     "Logs are unchanged. You have already investigated and read the logs. Focus on what the system is still doing.",
                 )
             
-            # If the agent tries reaidng a different logfile after executing all remediation actions atleast once
+            # If the agent tries reading a different logfile after executing all remediation actions atleast once
             # This is basically the agent stalling as it already has all the information it needs, and is executing the remediation actions incorrectly 
             # So agent is penalised with WRONG_TOOL_PENALTY 
             remediation_tools = {"block_ip", "delete_file", "kill_process"}
@@ -428,7 +428,7 @@ class MicroSocGymEnvironment(Environment):
             if ip == self.attacker_ip:
                 block_ip(ip) # Blocks the attacker IP
                 
-                # Episode is only done if backoor is also deleted and process is killed before this
+                # Episode is only done if backdoor is also deleted and process is killed before this
                 process_alive = check_hard_attack_process()
                 done = not os.path.exists(backdoor_path) and not process_alive
 
@@ -464,7 +464,7 @@ class MicroSocGymEnvironment(Environment):
                 # If it was killed then this action was successful and CORRECT_ACTION_REWARD is given
                 if not process_alive:
 
-                    # Episode is only done if backoor is also deleted and IP is blocked before this
+                    # Episode is only done if backdoor is also deleted and IP is blocked before this
                     ip_blocked = is_ip_blocked(self.attacker_ip)
                     done = not os.path.exists(backdoor_path) and ip_blocked
                     
@@ -476,7 +476,7 @@ class MicroSocGymEnvironment(Environment):
                         f"CORRECT! PID {pid} is killed. {'Threat neutralised.' if done else hint}",
                     )
                 
-                # If hard_attack script is alive and runningm then wrong PID was given, so penalty is given and feedback is given
+                # If hard_attack script is alive and running, then wrong PID was given, so penalty is given and feedback is given
                 else:
                     return (
                         PARTIAL_ACTION_REWARD,
@@ -516,7 +516,7 @@ class MicroSocGymEnvironment(Environment):
                     f"CORRECT! Backdoor file {path} deleted. {'Threat neutralised.' if done else hint}",
                 )
 
-            # If backoor file doesn't exist but the agent tries to delete it, then it is an attempt to game the system
+            # If backdoor file doesn't exist but the agent tries to delete it, then it is an attempt to game the system
             # So, WRONG_TOOL_PENALTY is given and feedback is provided accordingly  
             # The agent didn't do this, but seeing it trying that with block_ip, added it here as a safeguard as well
             elif not backdoor_exists and path == backdoor_path:
@@ -552,12 +552,12 @@ class MicroSocGymEnvironment(Environment):
     def grade_episode(self, scenario: str) -> float:
         score = 0.0
 
-        # If the attacker IP is blocked then gives the highest score
+        # For easy attack scenario, if the attacker IP is blocked then gives the highest score
         if scenario == "easy":
             if is_ip_blocked(self.attacker_ip):
                 score = 0.99
 
-        # If the attacker IP is blocked then gives the highest score
+        # For medium attack scenario, if the attacker IP is blocked then gives the highest score
         elif scenario == "medium":
             if is_ip_blocked(self.attacker_ip):
                 score = 0.99
