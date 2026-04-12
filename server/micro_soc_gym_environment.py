@@ -23,6 +23,7 @@ from server.constants import (
     HARD_ATTACK_FLAG_FILE_PATH,
     PID_FILE_PATH,
     MAX_STEPS,
+    EPISODE_END_THRESHOLD,
     CORRECT_ACTION_REWARD,
     CORRECT_INVESTIGATIVE_DIRECTION_REWARD,
     CORRECT_TOOL_WRONG_TARGET_REWARD,
@@ -189,6 +190,11 @@ class MicroSocGymEnvironment(Environment):
         self._state.total_reward += reward
         if success:
             self._state.threat_neutralised = True
+
+        # If cumulative reward falls below the threshold, we can conclude that this episode won't lead to any successful outcomes, so we end it
+        if self._state.total_reward < EPISODE_END_THRESHOLD and not done:
+            done = True
+            info += f" | Episode terminated: total reward dropped below threshold ({EPISODE_END_THRESHOLD})."
 
          # Ends the episode if it expires (max steps reached without success)
         if self._state.step_count >= MAX_STEPS and not done:
