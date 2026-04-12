@@ -316,8 +316,8 @@ def reward_chart_svg(history: List[Tuple[int, float, str]]) -> str:
         f'<text x="36" y="{MID - MAX_BAR + 4}" text-anchor="end" font-size="9" fill="#334155" font-family="monospace">+1.0</text>'
         f'<text x="36" y="{MID - MAX_BAR * 0.5 + 4:.0f}" text-anchor="end" font-size="9" fill="#334155" font-family="monospace">+0.5</text>'
         f'<text x="36" y="{MID + 4}" text-anchor="end" font-size="9" fill="#475569" font-family="monospace">0</text>'
-        f'<text x="36" y="{MID + MAX_BAR * 0.5 + 4:.0f}" text-anchor="end" font-size="9" fill="#334155" font-family="monospace">−0.5</text>'
-        f'<text x="36" y="{MID + MAX_BAR + 4}" text-anchor="end" font-size="9" fill="#334155" font-family="monospace">−1.0</text>'
+        f'<text x="36" y="{MID + MAX_BAR * 0.5 + 4:.0f}" text-anchor="end" font-size="9" fill="#334155" font-family="monospace">-0.5</text>'
+        f'<text x="36" y="{MID + MAX_BAR + 4}" text-anchor="end" font-size="9" fill="#334155" font-family="monospace">-1.0</text>'
     )
 
     return (
