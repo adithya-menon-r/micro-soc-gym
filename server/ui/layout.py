@@ -31,7 +31,7 @@ from server.ui.components import (
 from server.ui.handlers import handle_reset, handle_step
 
 
-# ── Stylesheet ────────────────────────────────────────────────────────────────
+# Stylesheet
 
 CSS = """
 /* Base */
@@ -146,7 +146,7 @@ INVESTIGATIVE_TOOLS = ["read_access_log", "read_auth_log"]
 REMEDIATION_TOOLS   = ["block_ip", "delete_file", "kill_process"]
 ALL_TOOLS = INVESTIGATIVE_TOOLS + REMEDIATION_TOOLS
 
-
+#responsible for structuring the entire ui by making use of the components
 def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
     """
     Assemble the full Gradio UI.
@@ -160,7 +160,7 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
 
     with gr.Blocks(css=CSS, head=HEAD, title="Micro-SOC Gym") as demo:
 
-        # ── Title bar ──────────────────────────────────────────────────────
+        # Title bar
         gr.HTML("""
         <div style="padding:28px 0 4px;border-bottom:1px solid #0f172a;margin-bottom:20px;">
           <div style="display:flex;align-items:baseline;gap:14px;">
@@ -168,18 +168,18 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
               Micro-SOC Gym
             </span>
             <span style="font-size:12px;color:#334155;font-family:monospace;">
-              RL · Security Operations · Meta × HuggingFace Hackathon
+              RL · Security Operations · Meta x HuggingFace Hackathon
             </span>
           </div>
           <p style="font-size:13px;color:#475569;margin:6px 0 0;line-height:1.5;">
-            An RL environment where an agent triages security incidents across three
+            An RL environment where an agent monitors and assesses security incidents across three
             escalating scenarios. Each episode: investigate logs → identify the threat
             → remediate with the right tool(s). 8-step budget.
           </p>
         </div>
         """)
 
-        # ── Reset + scenario header ────────────────────────────────────────
+        # Reset + scenario header
         with gr.Row():
             with gr.Column(scale=4):
                 scenario_header_html = gr.HTML(scenario_header(""))
@@ -196,12 +196,12 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
         # Episode outcome
         outcome_html = gr.HTML(outcome_banner(False, False, 0.0, 0))
 
-        # ── Stats row ─────────────────────────────────────────────────────
+        # Stats row
         with gr.Row():
             steps_stat  = gr.HTML(stat_card("STEPS", "— / 8"))
             reward_stat = gr.HTML(stat_card("TOTAL REWARD", "—"))
 
-        # ── Main two-column layout ─────────────────────────────────────────
+        # Main two-column layout
         with gr.Row(equal_height=False):
 
             # Left column — action controls + feedback
@@ -296,14 +296,14 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
                 )
                 history_html = gr.HTML(action_history_table([]))
 
-        # ── Reference tables (collapsed by default) ───────────────────────
+        # Reference tables (collapsed by default)
         with gr.Accordion("Scenario reference", open=False):
             gr.HTML(scenario_reference_html())
 
         with gr.Accordion("Reward reference", open=False):
             gr.HTML(reward_reference_html())
 
-        # ── Shared output list ────────────────────────────────────────────
+        # Shared output list
         # Order must match the return tuples in handlers.py exactly.
         _outputs = [
             scenario_header_html,   # 0
@@ -318,7 +318,7 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
             btn_delete_file,        # 9  - mirrored enable/disable
         ]
 
-        # ── Wiring ────────────────────────────────────────────────────────
+        # Wiring: making the buttons and other visuals work
 
         # Reset
         reset_btn.click(fn=_reset, inputs=[], outputs=_outputs)
