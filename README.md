@@ -54,16 +54,22 @@ This environment is based on the standard **OpenEnv** HTTP JSON schema patterns 
 
 State observations are fed continuously to the agent via the `MicroSocGymObservation` dictionary payload:
 
-- **`logs` (String)**: A real-time 50-line stream output representing the targeted log asset (`/var/log/nginx/access.log` or `/var/log/auth.log`).
-- **`reward` (Float)**: Immediate reinforcement mapping to the agent's recent action (+1.0 for success, 0.0 for penalties/noise).
+- **`reward` (Float)**: Immediate reinforcement mapping to the agent's recent action (-ve/0/+ve to help the agent understand the effect of the action).
 - **`done` (Boolean)**: Marks terminal episode conditions (Success, Failure, or Max-Steps Exhaustion).
 - **`success` (Boolean)**: Directly indicates if the active threat has been fully neutralized.
 - **`info` (String)**: Grader feedback and human-readable context hints.
 
 ### 2.2 Action Space
 
-Instead of simple directional movements, the agent manipulates an infrastructure API. The `MicroSocGymAction` requires specifying exactly one remediation `tool` per step:
+Instead of simple directional movements, the agent manipulates an infrastructure API. The `MicroSocGymAction` requires specifying exactly one `tool` per step, categorized into Investigative and Remediation actions:
 
+**Investigative Tools:**
+1. **`read_access_log()`**
+   - Reads the `/var/log/nginx/access.log` to parse web server traffic and identify anomalies or directory brute-forcing.
+2. **`read_auth_log()`**
+   - Reads the `/var/log/auth.log` to monitor system authentication events like SSH brute-force attempts.
+
+**Remediation Tools:**
 1. **`block_ip(ip_address: str)`**
    - Targets network ingress. Commits the rogue IP explicitly to the target's `/etc/nginx/blocklist.conf`.
 2. **`kill_process(pid: int)`**
@@ -71,7 +77,23 @@ Instead of simple directional movements, the agent manipulates an infrastructure
 3. **`delete_file(file_path: str)`**
    - Permanently deletes verified malware, webshells, or backdoor executable scripts from the host disk layer.
 
----
+### 2.3 Reward and Penalty Logic
+
+After running many episodes of each scenario and experimenting between different models we settled on this reward structure:
+
+| Value | Name | Note |
+| :---: | :--- | :--- |
+| **0.50** | `CORRECT_ACTION_REWARD` | Given when the correct tool and correct target are selected (e.g., blocking the attacker IP, deleting the backdoor, or killing the malicious process). |
+| **0.25** | `CORRECT_INVESTIGATIVE_DIRECTION_REWARD` | Partial reward for choosing the wrong logfile, but when the overall direction of investigation is correct. |
+| **0.10** | `CORRECT_TOOL_WRONG_TARGET_REWARD` | Given when the tool choice is correct but the wrong target is provided (e.g., blocking the wrong IP or killing the wrong process PID). |
+| **-0.20** | `PROCESS_KILL_FAIL_PENALTY` | Given when the process kill fails to execute (e.g., the process is already dead, not found, or could not be killed due to wrong PID). |
+| **-0.25** | `ACTION_TO_STALL_PENALTY` | Given when the agent tries reading a different logfile after executing all remediation actions at least once. This was introduced because this is basically the agent stalling as it already has all the information it needs, and is executing the remediation actions incorrectly. |
+| **-0.30** | `UNWARRANTED_ACTION_REPEAT_PENALTY` | Given when the agent unnecessarily repeats actions to game the system. This was introduced because the agent decided to read the same logs consecutively (or alternate `read_access_log`, `read_auth_log`, `read_access_log`... or re-blocking the same IP, or deleting a deleted file). This prevents the agent from exploiting such actions. |
+| **-0.50** | `WRONG_TOOL_PENALTY` | Given when the agent chooses the wrong tool for the given scenario altogether. |
+| **-0.75** | `WRONG_FILE_DELETION_PENALTY` | Given when the agent deletes the wrong file. Data is recoverable so it isn't completely fatal, but it is a severe mistake. |
+| **-1.00** | `ADMIN_IP_BLOCK_PENALTY` | Given when the admin IP is mistakenly blocked. This is a FATAL penalty, as the system stability drops. |
+| **-1.00** | `NON_INVESTIGATIVE_REMEDIATION_ACTION_PENALTY` | Given when the agent executes a remediation action without ever investigating the alert. This was introduced to penalise the agent because it will just try to guess through the whole episode without looking at logs, hence there is no point continuing. |
+
 
 ## 3. Task Descriptions & Difficulty
 
@@ -81,7 +103,7 @@ The environment runs each scenario via a round-robin rotation upon iteration (`/
 | :---: | :--- | :--- |
 | **Easy** | **Directory Brute Forcing**<br>A single IP is generating a massive amount of `HTTP 404` errors by brute forcing hidden admin pages (like `/admin` or `/wp-login.php`). | **Goal:** Find the malicious IP in `access.log` and call `block_ip(IP)`.<br>**Constraint:** None |
 | **Medium** | **SSH Brute Force**<br>An attacker is brute forcing the server with failed SSH login attempts (visible in `auth.log`), but legitimate admin traffic is happening at the exact same time. | **Goal:** Identify the attacker's IP and call `block_ip(IP)`.<br>**Constraint:** High false-positive penalty. If the agent accidentally blocks the legitimate admin subnet, it triggers an immediate failure. |
-| **Hard** | **Active C2 Backdoor**<br>An attacker has dropped a malicious file on the webserver and is actively sending base64-encoded commands to running processes. | **Goal:** Delete the backdoor and kill the malicious process.<br>**Constraint:** The agent must kill the active session using `kill_process(PID)` *and* remove the payload using `delete_file(FILE)`. Doing only one will not stop the attacker. |
+| **Hard** | **Active C2 Backdoor**<br>An attacker IP has dropped a malicious file on the webserver and is actively sending base64-encoded commands to running processes. | **Goal:** Delete the backdoor, kill the malicious process and block the attacker IP.<br>**Constraint:** The agent must first remove the payload using `delete_file(FILE)` to prevent re-spawn of the malicious process. Then, it must kill the currently running mailcious process using `kill_process(PROCESS)` and then block the IP to prevent future payloads using `block_ip(IP)`. Doing any one or two will not stop the attacker. |
 
 
 ## 4. Inference & Results
