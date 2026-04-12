@@ -169,7 +169,6 @@ class MicroSocGymEnvironment(Environment):
 
     # Step method that executes an action and returns its results and a new observation
     def step(self, action: MicroSocGymAction) -> MicroSocGymObservation:
-        # Guard against post-episode calls
         if self._state.episode_done:
             return MicroSocGymObservation(
                 reward=0.0,
@@ -179,6 +178,7 @@ class MicroSocGymEnvironment(Environment):
             )
 
         self._state.step_count += 1
+        scenario = self._state.scenario                                          # ← add this
         reward, done, success, info = self._calculate_reward(action, scenario)
 
         self._state.total_reward += reward
@@ -190,7 +190,7 @@ class MicroSocGymEnvironment(Environment):
             info += f" | Episode timed out after {MAX_STEPS} steps."
 
         if done:
-            self._state.episode_done = True    # ← set the flag
+            self._state.episode_done = True
 
         return MicroSocGymObservation(
             reward=reward,
