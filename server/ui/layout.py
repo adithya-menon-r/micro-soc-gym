@@ -146,7 +146,7 @@ INVESTIGATIVE_TOOLS = ["read_access_log", "read_auth_log"]
 REMEDIATION_TOOLS   = ["block_ip", "delete_file", "kill_process"]
 ALL_TOOLS = INVESTIGATIVE_TOOLS + REMEDIATION_TOOLS
 
-#responsible for structuring the entire ui by making use of the components
+
 def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
     """
     Assemble the full Gradio UI.
@@ -168,11 +168,11 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
               Micro-SOC Gym
             </span>
             <span style="font-size:12px;color:#334155;font-family:monospace;">
-              RL · Security Operations · Meta x HuggingFace Hackathon
+              RL · Security Operations · Meta × HuggingFace Hackathon
             </span>
           </div>
           <p style="font-size:13px;color:#475569;margin:6px 0 0;line-height:1.5;">
-            An RL environment where an agent monitors and assesses security incidents across three
+            An RL environment where an agent triages security incidents across three
             escalating scenarios. Each episode: investigate logs → identify the threat
             → remediate with the right tool(s). 8-step budget.
           </p>
@@ -305,6 +305,8 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
 
         # Shared output list
         # Order must match the return tuples in handlers.py exactly.
+        # ALL five tool buttons are included so handlers can disable every
+        # one of them when done=True, preventing the "9 / 8" overshoot.
         _outputs = [
             scenario_header_html,   # 0
             outcome_html,           # 1
@@ -314,11 +316,14 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
             history_html,           # 5
             reward_chart_html,      # 6
             feedback_box,           # 7
-            btn_block_ip,           # 8  - interactive toggle (step_btn alias)
-            btn_delete_file,        # 9  - mirrored enable/disable
+            btn_access_log,         # 8  — investigative
+            btn_auth_log,           # 9  — investigative
+            btn_block_ip,           # 10 — remediation
+            btn_delete_file,        # 11 — remediation
+            btn_kill_process,       # 12 — remediation
         ]
 
-        # Wiring: making the buttons and other visuals work
+        # Wiring
 
         # Reset
         reset_btn.click(fn=_reset, inputs=[], outputs=_outputs)

@@ -19,6 +19,7 @@ import gradio as gr
 
 from models import MicroSocGymAction, MicroSocGymObservation
 from server.micro_soc_gym_environment import MicroSocGymEnvironment
+from server.constants import MAX_STEPS
 from server.ui.components import (
     scenario_header,
     outcome_banner,
@@ -34,13 +35,13 @@ _step_rewards: List[Tuple[int, float, str]] = []
 # Each item: dict with step/tool/param/reward/result/success
 _action_history: List[dict] = []
 
-#reset the environment
+
 def _reset_state() -> None:
     global _step_rewards, _action_history
     _step_rewards = []
     _action_history = []
 
-#get the action parameter value based on the action
+
 def _param_str(action: MicroSocGymAction) -> str:
     if action.tool == "block_ip":
         return action.ip_address or "(none)"
@@ -50,7 +51,7 @@ def _param_str(action: MicroSocGymAction) -> str:
         return str(action.pid) if action.pid is not None else "(none)"
     return ""   # investigative tools have no parameter
 
-#check if the ip is blocked; file is deleted; process is killed fir the given environment
+
 def _hard_progress_state(env: MicroSocGymEnvironment):
     """
     Derive the three booleans for the hard-scenario progress tracker
@@ -86,7 +87,7 @@ def _hard_progress_state(env: MicroSocGymEnvironment):
     return ip_blocked, file_deleted, proc_killed
 
 
-# Public handlers: re-rendering the UI for the reset (getting the UI set for next episode of the environment)
+# Public handlers
 def handle_reset(env: MicroSocGymEnvironment):
     """Called when the user clicks Reset. Returns all UI output values."""
     _reset_state()
@@ -95,24 +96,29 @@ def handle_reset(env: MicroSocGymEnvironment):
     state = env.state
 
     scenario = state.scenario
-    # total_reward = state.total_reward
+    total_reward = state.total_reward
+
+    # Re-enable all five tool buttons for the new episode
+    _btn_on = gr.update(interactive=True)
 
     return (
-        scenario_header(scenario),                         # scenario_header_html
-        outcome_banner(False, False, 0.0, 0),              # outcome_html
-        hard_progress(False, False, False)                 # hard_progress_html
+        scenario_header(scenario),                      # 0  scenario_header_html
+        outcome_banner(False, False, 0.0, 0),           # 1  outcome_html
+        hard_progress(False, False, False)               # 2  hard_progress_html
             if scenario == "hard" else "",
-        stat_card("STEPS", f"0 / 8"),                      # steps_stat
-        stat_card("TOTAL REWARD", "+0.00", "#38bdf8"),   # reward_stat
-        action_history_table([]),                          # history_html
-        reward_chart_svg([]),                              # chart_html
-        obs.info,                                          # feedback_box (last action result)
-        gr.update(interactive=True),                       # step_btn enable
-        gr.update(interactive=True),                       # tool_dropdown
+        stat_card("STEPS", "0 / 8"),                    # 3  steps_stat
+        stat_card("TOTAL REWARD", "+0.00", "#38bdf8"),  # 4  reward_stat
+        action_history_table([]),                        # 5  history_html
+        reward_chart_svg([]),                            # 6  chart_html
+        obs.info,                                        # 7  feedback_box
+        _btn_on,                                         # 8  btn_access_log
+        _btn_on,                                         # 9  btn_auth_log
+        _btn_on,                                         # 10 btn_block_ip
+        _btn_on,                                         # 11 btn_delete_file
+        _btn_on,                                         # 12 btn_kill_process
     )
 
-# execute the action/step in the soc environment
-# tracking of the reward history and the action history for the current episode takesplace
+
 def handle_step(
     env: MicroSocGymEnvironment,
     tool: str,
@@ -175,19 +181,26 @@ def handle_step(
     else:
         hard_prog = ""
 
-    # Disable step button if episode is done
-    step_interactive = not obs.done
+    # When the episode ends, disable every tool button so the user cannot
+    # fire a 9th action past the 8-step budget. Reset re-enables them all.
+    _btn = gr.update(interactive=not obs.done)
+
+    steps_color = "#f87171" if step_count >= MAX_STEPS else (
+        "#fb923c" if step_count >= 6 else "#38bdf8"
+    )
 
     return (
-        scenario_header(scenario),
-        outcome_banner(obs.done, obs.success, total_reward, step_count),
-        hard_prog,
-        stat_card("STEPS", f"{step_count} / 8",
-                  "#fb923c" if step_count >= 6 else "#38bdf8"),
-        stat_card("TOTAL REWARD", f"{total_reward:+.2f}", r_color),
-        action_history_table(_action_history),
-        reward_chart_svg(_step_rewards),
-        obs.info,
-        gr.update(interactive=step_interactive),
-        gr.update(interactive=True),
+        scenario_header(scenario),                                        # 0
+        outcome_banner(obs.done, obs.success, total_reward, step_count),  # 1
+        hard_prog,                                                         # 2
+        stat_card("STEPS", f"{step_count} / 8", steps_color),            # 3
+        stat_card("TOTAL REWARD", f"{total_reward:+.2f}", r_color),      # 4
+        action_history_table(_action_history),                            # 5
+        reward_chart_svg(_step_rewards),                                  # 6
+        obs.info,                                                          # 7
+        _btn,                                                              # 8  btn_access_log
+        _btn,                                                              # 9  btn_auth_log
+        _btn,                                                              # 10 btn_block_ip
+        _btn,                                                              # 11 btn_delete_file
+        _btn,                                                              # 12 btn_kill_process
     )
