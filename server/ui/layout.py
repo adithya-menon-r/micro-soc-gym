@@ -28,9 +28,9 @@ CSS = """
     --soc-border:       #1e293b;
     --soc-border-2:     #1f2d3d;
     --soc-text-primary: #e2e8f0;
-    --soc-text-muted:   #94a3b8;
-    --soc-text-faint:   #475569;
-    --soc-text-dimmer:  #334155;
+    --soc-text-muted:   #ffffff;
+    --soc-text-faint:   #ffffff;
+    --soc-text-dimmer:  #ffffff;
     --soc-code-bg:      #0a0f1a;
     --soc-chart-bg:     #080e1a;
 }
@@ -43,9 +43,9 @@ CSS = """
         --soc-border:       #cbd5e1;
         --soc-border-2:     #e2e8f0;
         --soc-text-primary: #0f172a;
-        --soc-text-muted:   #475569;
-        --soc-text-faint:   #64748b;
-        --soc-text-dimmer:  #94a3b8;
+        --soc-text-muted:   #000000;
+        --soc-text-faint:   #000000;
+        --soc-text-dimmer:  #000000;
         --soc-code-bg:      #f1f5f9;
         --soc-chart-bg:     #f8fafc;
     }
@@ -58,9 +58,9 @@ CSS = """
     --soc-border:       #cbd5e1;
     --soc-border-2:     #e2e8f0;
     --soc-text-primary: #0f172a;
-    --soc-text-muted:   #475569;
-    --soc-text-faint:   #64748b;
-    --soc-text-dimmer:  #94a3b8;
+    --soc-text-muted:   #000000;
+    --soc-text-faint:   #000000;
+    --soc-text-dimmer:  #000000;
     --soc-code-bg:      #f1f5f9;
     --soc-chart-bg:     #f8fafc;
 }
@@ -76,7 +76,7 @@ CSS = """
     line-height: 1.75;
 }
 .soc-scenario-badge {
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 700 !important;
     padding: 6px 14px !important;
     border-radius: 9999px !important; /* Pill shape */
@@ -85,7 +85,7 @@ CSS = """
     display: inline-block !important;
 }
 .soc-scenario-threat {
-    font-size: 17px !important;
+    font-size: 18px !important;
     font-weight: 500 !important;
     color: var(--soc-text-primary) !important;
     margin-top: 10px !important;
@@ -93,7 +93,7 @@ CSS = """
 }
 .soc-hint-line {
     margin-top: 8px;
-    font-size: 12px;
+    font-size: 13px;
     color: var(--soc-text-muted);
 }
 .soc-hint-key {
@@ -105,7 +105,7 @@ CSS = """
     background: #2d1515;
     border-left: 3px solid #ef4444;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 13px;
     color: #fca5a5;
 }
 
@@ -114,7 +114,7 @@ CSS = """
     border-radius: 8px;
     padding: 12px 18px;
     font-family: monospace;
-    font-size: 13px;
+    font-size: 14px;
 }
 .soc-outcome-running {
     background: var(--soc-surface);
@@ -138,7 +138,7 @@ CSS = """
 .soc-outcome-success .soc-outcome-title { color: #4ade80; }
 .soc-outcome-fail    .soc-outcome-title { color: #f87171; }
 .soc-outcome-sub {
-    font-size: 12px;
+    font-size: 13px;
     margin-top: 4px;
 }
 .soc-outcome-success .soc-outcome-sub { color: #86efac; }
@@ -153,7 +153,7 @@ CSS = """
     margin-top: 8px;
 }
 .soc-progress-label {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--soc-text-faint);
     font-family: monospace;
     letter-spacing: 0.5px;
@@ -163,7 +163,7 @@ CSS = """
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: 13px;
     font-family: monospace;
     padding: 5px 12px;
     border-radius: 20px;
@@ -181,14 +181,14 @@ CSS = """
     text-align: center;
 }
 .soc-stat-label {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--soc-text-dimmer);
     font-family: monospace;
     letter-spacing: 0.5px;
     margin-bottom: 4px;
 }
 .soc-stat-value {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
     font-family: monospace;
 }
@@ -209,7 +209,7 @@ CSS = """
     justify-content: center;
     color: var(--soc-text-dimmer);
     font-family: monospace;
-    font-size: 12px;
+    font-size: 13px;
 }
 
 /* Reference tables */
@@ -219,15 +219,15 @@ CSS = """
     text-align: left;
     padding: 6px 12px;
     color: var(--soc-text-dimmer);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
 }
 .soc-ref-row    { border-bottom: 1px solid var(--soc-border); }
-.soc-ref-desc   { padding: 7px 12px; color: var(--soc-text-muted); font-size: 12px; }
-.soc-ref-cell      { padding: 8px 12px; color: var(--soc-text-muted); font-size: 12px; }
-.soc-ref-cell-mono { padding: 8px 12px; color: var(--soc-text-faint); font-size: 12px; font-family: monospace; }
-.soc-ref-cell-fix  { padding: 8px 12px; color: #38bdf8; font-size: 12px; font-family: monospace; }
-.soc-ref-cell-note { padding: 8px 12px; color: var(--soc-text-dimmer); font-size: 11px; }
+.soc-ref-desc   { padding: 7px 12px; color: var(--soc-text-muted); font-size: 13px; }
+.soc-ref-cell      { padding: 8px 12px; color: var(--soc-text-muted); font-size: 13px; }
+.soc-ref-cell-mono { padding: 8px 12px; color: var(--soc-text-faint); font-size: 13px; font-family: monospace; }
+.soc-ref-cell-fix  { padding: 8px 12px; color: #38bdf8; font-size: 13px; font-family: monospace; }
+.soc-ref-cell-note { padding: 8px 12px; color: var(--soc-text-dimmer); font-size: 12px; }
 
 /* Gradio Blocks overrides */
 .gradio-container .prose { max-width: 100% !important; }
@@ -244,7 +244,7 @@ CSS = """
 }
 .feedback-box label {
     color: var(--soc-text-dimmer) !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
 }
 
 /* Tool inputs */
@@ -258,7 +258,7 @@ CSS = """
 }
 .tool-input label {
     color: var(--soc-text-faint) !important;
-    font-size: 11px !important;
+    font-size: 12px !important;
     letter-spacing: 0.3px;
 }
 .tool-input input:focus {
@@ -273,7 +273,7 @@ CSS = """
     font-weight: 700 !important;
     border: none !important;
     border-radius: 8px !important;
-    font-size: 14px !important;
+    font-size: 15px !important;
     padding: 12px 0 !important;
     letter-spacing: 0.3px;
     transition: background 0.15s;
@@ -286,7 +286,7 @@ CSS = """
     font-weight: 700 !important;
     border: 1px solid #0369a1 !important;
     border-radius: 8px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-family: monospace !important;
     transition: background 0.15s;
 }
@@ -299,7 +299,7 @@ CSS = """
     font-weight: 700 !important;
     border: 1px solid #7e22ce !important;
     border-radius: 8px !important;
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-family: monospace !important;
     transition: background 0.15s;
 }
@@ -308,7 +308,7 @@ CSS = """
 
 /* Section labels */
 .section-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 1px;
     color: var(--soc-text-dimmer);
@@ -323,7 +323,7 @@ CSS = """
     color: #38bdf8;
     padding: 1px 5px;
     border-radius: 3px;
-    font-size: 11px;
+    font-size: 12px;
 }
 """
 
@@ -349,14 +349,14 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
         gr.HTML("""
         <div style="padding:28px 0 4px;border-bottom:1px solid #0f172a;margin-bottom:20px;">
           <div style="display:flex;align-items:baseline;gap:14px;">
-            <span style="font-size:20px;font-weight:700;color:#e2e8f0;letter-spacing:-0.5px;">
+            <span style="font-size:22px;font-weight:700;color:#e2e8f0;letter-spacing:-0.5px;">
               Micro SOC Gym
             </span>
-            <span style="font-size:12px;color:#334155;font-family:monospace;">
+            <span style="font-size:13px;color:#ffffff;font-family:monospace;">
               Meta x HuggingFace Hackathon
             </span>
           </div>
-          <p style="font-size:13px;color:#475569;margin:6px 0 0;line-height:1.5;">
+          <p style="font-size:14px;color:#ffffff;margin:6px 0 0;line-height:1.5;">
             An Reinforcement Learning (RL) environment where an agent triages security incidents across three scenarios simulating different attacks. Investigate, Identify Attack & Remediate, all within 8 steps. 
           </p>
         </div>
@@ -387,7 +387,7 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
                 # Investigative tools
                 gr.HTML(
                     '<div class="section-label">1. Investigate</div>'
-                    '<div style="font-size:12px;color:#334155;margin-bottom:10px;">'
+                    '<div style="font-size:13px;color:#ffffff;margin-bottom:10px;">'
                     'Read logs before taking any remediation action.</div>'
                 )
                 with gr.Row():
@@ -407,7 +407,7 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
                 # Remediation tools
                 gr.HTML(
                     '<div class="section-label">2. Remediate</div>'
-                    '<div style="font-size:12px;color:#334155;margin-bottom:10px;">'
+                    '<div style="font-size:13px;color:#ffffff;margin-bottom:10px;">'
                     'Fill in the required parameter then click the tool button.</div>'
                 )
 
