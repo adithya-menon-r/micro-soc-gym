@@ -88,7 +88,7 @@ The environment runs each scenario via a round-robin rotation upon iteration (`/
 
 The environment tests models across progressively harder scenarios. Below is an evaluation run using the `Qwen/Qwen2.5-72B-Instruct` model via our built in ReAct script (`inference.py`). 
 
-The trace shows the agent successfully reading the environment state and calling the correct tools (`block_ip`, `delete_file`, `kill_process`). It achieves a perfect `3.00/3.00` score, resolving all the threats.
+The trace shows the agent successfully reading the environment state and calling the correct tools (`block_ip`, `delete_file`, `kill_process`). It achieves the maximum score of `0.99` in each scenario, resolving all the threats.
 
 ![Inference Results for Qwen 72B model](/media/inference.png)
 
@@ -99,7 +99,7 @@ To help visualise the environment, we built an interactive Gradio Dashboard whic
 
 It lets you manually play the role of the responding agent. By reading the logs, triggering tools, and seeing how the environment scores your actions, you can easily understand the mechanics, constraints, and underlying reward logic the Agent has to learn.
 
-https://github.com/user-attachments/assets/e3428fef-4008-47f6-b9df-d95chee8cc7a6
+https://github.com/user-attachments/assets/80c28b86-2f0f-4ad8-a383-8d50048c1a43
 
 ## 6. Setup & Usage Instructions
 
@@ -111,7 +111,7 @@ https://github.com/user-attachments/assets/e3428fef-4008-47f6-b9df-d95chee8cc7a6
 docker build -t micro-soc-gym .
 
 # 2. Run the container
-docker run -p 7860:7860 micro-soc-gym
+docker run -d -p 7860:7860 micro-soc-gym
 ```
 
 **Note:** You can access the **Gradio Dashboard** at `http://localhost:7860/` for manual testing
@@ -125,7 +125,7 @@ source .venv/bin/activate  # (Windows: .\.venv\Scripts\activate)
 pip install -r requirements.txt
 
 # 2. Set Hugging Face Hub Credentials
-export HF_TOKEN="<your_secure_hugging_face_token>"
+export HF_TOKEN="<YOUR_HUGGING_FACE_TOKEN>"
 
 # 3. Run the Inference Script
 python inference.py
@@ -153,12 +153,14 @@ micro_soc_gym/
 ├── server/                           # OpenEnv Backend Services
 │   ├── ui/                           # Gradio UI subpackage
 │   │   ├── __init__.py               # Exports build_ui()
-│   │   ├── components.py             # Pure HTML/SVG string generators (theme-aware)
+│   │   ├── components.py             # Pure HTML/SVG string generators
 │   │   ├── handlers.py               # Gradio event handlers and episode state
 │   │   └── layout.py                 # gr.Blocks layout assembly and component wiring
 │   ├── __init__.py                   # Package initializer
 │   ├── app.py                        # FastAPI endpoints and Gradio Telemetry Dashboard
-│   └── micro_soc_gym_environment.py  # Primary orchestration, grader matrix, and rules engines
+│   ├── constants.py                  # Shared constant values and definitions
+│   ├── micro_soc_gym_environment.py  # Builds the OpenEnv environment, Grading and Reward logic
+│   └── utils.py                      # Reusable utilities and helper functions
 ├── __init__.py                       # Package initializer
 ├── client.py                         # Synchronous HTTP validation client
 ├── Dockerfile                        # Environment runtime manifest & OS provisions
@@ -167,6 +169,7 @@ micro_soc_gym/
 ├── nginx-default                     # Nginx server configuration defaults and simulated routing
 ├── openenv.yaml                      # OpenEnv space requirement configuration
 ├── pyproject.toml                    # Python package configuration
+├── README.md                         # Documentation
 ├── requirements.txt                  # Python dependencies
 ├── schema.json                       # Validation schema for standard OpenEnv JSON interactions
 ├── supervisord.conf                  # Daemon management orchestrator (Nginx, API, Attacks)
