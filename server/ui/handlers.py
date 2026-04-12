@@ -4,15 +4,6 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""
-Gradio event handler functions for the Micro-SOC Gym UI.
-
-All functions receive plain Python values from Gradio inputs and
-return plain Python values / gr.update() objects.
-State is held in module-level lists that are reset on each episode.
-This is single-user / single-env — consistent with max_concurrent_envs=1.
-"""
-
 from __future__ import annotations
 from typing import List, Tuple
 import gradio as gr
@@ -29,10 +20,7 @@ from server.ui.components import (
     stat_card,
 )
 
-# ── Module-level episode state ────────────────────────────────────────────────
-# Each item: (step_number, per_step_reward, tool_name)
 _step_rewards: List[Tuple[int, float, str]] = []
-# Each item: dict with step/tool/param/reward/result/success
 _action_history: List[dict] = []
 
 
@@ -53,13 +41,9 @@ def _param_str(action: MicroSocGymAction) -> str:
 
 
 def _hard_progress_state(env: MicroSocGymEnvironment):
-    """
-    Derive the three booleans for the hard-scenario progress tracker
-    directly from the environment's live state.
-    """
-    from server.utils import is_ip_blocked, check_hard_attack_process
     import os
     from server.constants import WEBROOT_PATH
+    from server.utils import is_ip_blocked, check_hard_attack_process
 
     ip_blocked = False
     file_deleted = False
@@ -87,10 +71,8 @@ def _hard_progress_state(env: MicroSocGymEnvironment):
     return ip_blocked, file_deleted, proc_killed
 
 
-# ── Public handlers ───────────────────────────────────────────────────────────
-
+# Public handlers
 def handle_reset(env: MicroSocGymEnvironment):
-    """Called when the user clicks Reset. Returns all UI output values."""
     _reset_state()
 
     obs: MicroSocGymObservation = env.reset()
@@ -103,20 +85,19 @@ def handle_reset(env: MicroSocGymEnvironment):
     _btn_on = gr.update(interactive=True)
 
     return (
-        scenario_header(scenario),                      # 0  scenario_header_html
-        outcome_banner(False, False, 0.0, 0),           # 1  outcome_html
-        hard_progress(False, False, False)               # 2  hard_progress_html
-            if scenario == "hard" else "",
-        stat_card("STEPS", "0 / 8"),                    # 3  steps_stat
-        stat_card("TOTAL REWARD", "+0.00", "#38bdf8"),  # 4  reward_stat
-        action_history_table([]),                        # 5  history_html
-        reward_chart_svg([]),                            # 6  chart_html
-        obs.info,                                        # 7  feedback_box
-        _btn_on,                                         # 8  btn_access_log
-        _btn_on,                                         # 9  btn_auth_log
-        _btn_on,                                         # 10 btn_block_ip
-        _btn_on,                                         # 11 btn_delete_file
-        _btn_on,                                         # 12 btn_kill_process
+        scenario_header(scenario),
+        outcome_banner(False, False, 0.0, 0),
+        hard_progress(False, False, False) if scenario == "hard" else "",
+        stat_card("STEPS", "0 / 8"),
+        stat_card("TOTAL REWARD", "+0.00", "#38bdf8"),
+        action_history_table([]),
+        reward_chart_svg([]),
+        obs.info,
+        _btn_on,
+        _btn_on,
+        _btn_on,
+        _btn_on,
+        _btn_on,
     )
 
 
@@ -127,8 +108,6 @@ def handle_step(
     file_path: str,
     pid_str: str,
 ):
-    """Called when the user clicks Execute Action."""
-    # Coerce Gradio's possible None values
     ip_address = (ip_address or "").strip()
     file_path = (file_path or "").strip()
     pid_str = (pid_str or "").strip()
@@ -191,17 +170,17 @@ def handle_step(
     )
 
     return (
-        scenario_header(scenario),                                        # 0
-        outcome_banner(obs.done, obs.success, total_reward, step_count),  # 1
-        hard_prog,                                                         # 2
-        stat_card("STEPS", f"{step_count} / 8", steps_color),            # 3
-        stat_card("TOTAL REWARD", f"{total_reward:+.2f}", r_color),      # 4
-        action_history_table(_action_history),                            # 5
-        reward_chart_svg(_step_rewards),                                  # 6
-        obs.info,                                                          # 7
-        _btn,                                                              # 8  btn_access_log
-        _btn,                                                              # 9  btn_auth_log
-        _btn,                                                              # 10 btn_block_ip
-        _btn,                                                              # 11 btn_delete_file
-        _btn,                                                              # 12 btn_kill_process
+        scenario_header(scenario),
+        outcome_banner(obs.done, obs.success, total_reward, step_count),
+        hard_prog,
+        stat_card("STEPS", f"{step_count} / 8", steps_color),
+        stat_card("TOTAL REWARD", f"{total_reward:+.2f}", r_color),
+        action_history_table(_action_history),
+        reward_chart_svg(_step_rewards),
+        obs.info,
+        _btn,
+        _btn,
+        _btn,
+        _btn,
+        _btn,
     )

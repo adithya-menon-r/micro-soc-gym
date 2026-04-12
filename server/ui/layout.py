@@ -4,15 +4,6 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""
-Gradio layout for the Micro-SOC Gym.
-
-build_ui(env) → gr.Blocks
-
-This file is purely structural — no business logic, no HTML string
-generation. Those live in components.py and handlers.py respectively.
-"""
-
 from __future__ import annotations
 import gradio as gr
 from functools import partial
@@ -30,10 +21,10 @@ from server.ui.components import (
 )
 from server.ui.handlers import handle_reset, handle_step
 
-# Stylesheet
 
+# Stylesheet
 CSS = """
-/* ── Custom properties — dark mode (Gradio default) ── */
+/* Dark mode colors (Gradio default) */
 :root {
     --soc-surface:      #0f172a;
     --soc-surface-2:    #111827;
@@ -47,7 +38,7 @@ CSS = """
     --soc-chart-bg:     #080e1a;
 }
 
-/* ── Light mode overrides ── */
+/* Light mode colors override */
 @media (prefers-color-scheme: light) {
     :root {
         --soc-surface:      #f8fafc;
@@ -63,7 +54,7 @@ CSS = """
     }
 }
 
-/* Gradio also injects a data-theme attribute — cover both */
+/* Data theme attribute for both modes*/
 [data-theme="light"] {
     --soc-surface:      #f8fafc;
     --soc-surface-2:    #f1f5f9;
@@ -77,7 +68,7 @@ CSS = """
     --soc-chart-bg:     #f8fafc;
 }
 
-/* ── Scenario card ── */
+/* Scenario card */
 .soc-scenario-card {
     background: var(--soc-surface);
     border: 1px solid var(--soc-border);
@@ -118,7 +109,7 @@ CSS = """
     color: #fca5a5;
 }
 
-/* ── Outcome banner ── */
+/* Outcome banner */
 .soc-outcome {
     border-radius: 8px;
     padding: 12px 18px;
@@ -153,7 +144,7 @@ CSS = """
 .soc-outcome-success .soc-outcome-sub { color: #86efac; }
 .soc-outcome-fail    .soc-outcome-sub { color: #fca5a5; }
 
-/* ── Hard progress ── */
+/* Hard progress */
 .soc-progress-box {
     background: var(--soc-surface);
     border: 1px solid var(--soc-border-2);
@@ -181,7 +172,7 @@ CSS = """
 .soc-pill-done    { background: #052e16; border-color: #16a34a; color: #4ade80; }
 .soc-pill-pending { background: var(--soc-surface-2); border-color: var(--soc-border); color: var(--soc-text-faint); }
 
-/* ── Stat card ── */
+/* Stat card */
 .soc-stat-card {
     background: var(--soc-surface);
     border: 1px solid var(--soc-border-2);
@@ -202,7 +193,7 @@ CSS = """
     font-family: monospace;
 }
 
-/* ── Action history table ── */
+/* Action history table */
 .soc-hist-table {
     width: 100%;
     border-collapse: collapse;
@@ -232,7 +223,7 @@ CSS = """
     text-align: center;
 }
 
-/* ── Reward chart ── */
+/* Reward chart */
 .soc-chart-svg {
     width: 100%;
     background: var(--soc-chart-bg);
@@ -252,7 +243,7 @@ CSS = """
     font-size: 12px;
 }
 
-/* ── Reference tables ── */
+/* Reference tables */
 .soc-ref-table  { width: 100%; border-collapse: collapse; }
 .soc-ref-header { border-bottom: 2px solid var(--soc-border); }
 .soc-ref-th {
@@ -269,7 +260,7 @@ CSS = """
 .soc-ref-cell-fix  { padding: 8px 12px; color: #38bdf8; font-size: 12px; font-family: monospace; }
 .soc-ref-cell-note { padding: 8px 12px; color: var(--soc-text-dimmer); font-size: 11px; }
 
-/* ── Gradio Blocks overrides ── */
+/* Gradio Blocks overrides */
 .gradio-container .prose { max-width: 100% !important; }
 
 /* Feedback box */
@@ -306,7 +297,7 @@ CSS = """
     outline: none !important;
 }
 
-/* Buttons — colors are fixed (not theme-aware) because they carry semantic meaning */
+/* Buttons */
 .btn-reset {
     background: #1d4ed8 !important;
     color: #fff !important;
@@ -357,7 +348,6 @@ CSS = """
     text-transform: uppercase;
 }
 
-/* code tags inside HTML components */
 .soc-scenario-card code,
 .soc-hint-line code {
     background: var(--soc-code-bg);
@@ -378,14 +368,8 @@ INVESTIGATIVE_TOOLS = ["read_access_log", "read_auth_log"]
 REMEDIATION_TOOLS   = ["block_ip", "delete_file", "kill_process"]
 ALL_TOOLS = INVESTIGATIVE_TOOLS + REMEDIATION_TOOLS
 
-
+# Builds the Gradio UI
 def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
-    """
-    Assemble the full Gradio UI.
-    `env` is the singleton environment instance — passed in so the
-    layout file never imports it directly (keeps the dependency flow clean).
-    """
-
     # Bind handlers to the env singleton
     _reset = partial(handle_reset, env)
     _step  = partial(handle_step, env)
@@ -422,7 +406,7 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
                     size="lg",
                 )
 
-        # Hard-scenario progress (hidden for easy/medium)
+        # Hard scenario progress (hidden for easy/medium)
         hard_progress_html = gr.HTML("")
 
         # Episode outcome
@@ -430,18 +414,18 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
 
         # Stats row
         with gr.Row():
-            steps_stat  = gr.HTML(stat_card("STEPS", "— / 8"))
-            reward_stat = gr.HTML(stat_card("TOTAL REWARD", "—"))
+            steps_stat  = gr.HTML(stat_card("STEPS", "- / 8"))
+            reward_stat = gr.HTML(stat_card("TOTAL REWARD", "-"))
 
         # Main two-column layout
         with gr.Row(equal_height=False):
 
-            # Left column — action controls + feedback
+            # Left column - action controls + feedback
             with gr.Column(scale=3):
 
                 # Investigative tools
                 gr.HTML(
-                    '<div class="section-label">① Investigate</div>'
+                    '<div class="section-label">1. Investigate</div>'
                     '<div style="font-size:12px;color:#334155;margin-bottom:10px;">'
                     'Read logs before taking any remediation action.</div>'
                 )
@@ -459,7 +443,7 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
 
                 # Remediation tools
                 gr.HTML(
-                    '<div class="section-label">② Remediate</div>'
+                    '<div class="section-label">2. Remediate</div>'
                     '<div style="font-size:12px;color:#334155;margin-bottom:10px;">'
                     'Fill in the required parameter then click the tool button.</div>'
                 )
@@ -516,7 +500,7 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
                     elem_classes="feedback-box",
                 )
 
-            # Right column — history + chart
+            # Right column - history + chart
             with gr.Column(scale=2):
 
                 gr.HTML('<div class="section-label">Per-step rewards</div>')
@@ -535,32 +519,26 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
         with gr.Accordion("Reward reference", open=False):
             gr.HTML(reward_reference_html())
 
-        # Shared output list
-        # Order must match the return tuples in handlers.py exactly.
-        # ALL five tool buttons are included so handlers can disable every
-        # one of them when done=True, preventing the "9 / 8" overshoot.
         _outputs = [
-            scenario_header_html,   # 0
-            outcome_html,           # 1
-            hard_progress_html,     # 2
-            steps_stat,             # 3
-            reward_stat,            # 4
-            history_html,           # 5
-            reward_chart_html,      # 6
-            feedback_box,           # 7
-            btn_access_log,         # 8  — investigative
-            btn_auth_log,           # 9  — investigative
-            btn_block_ip,           # 10 — remediation
-            btn_delete_file,        # 11 — remediation
-            btn_kill_process,       # 12 — remediation
+            scenario_header_html,
+            outcome_html,
+            hard_progress_html,
+            steps_stat,
+            reward_stat,
+            history_html,
+            reward_chart_html,
+            feedback_box,
+            btn_access_log,
+            btn_auth_log,
+            btn_block_ip,
+            btn_delete_file,
+            btn_kill_process,
         ]
-
-        # Wiring
 
         # Reset
         reset_btn.click(fn=_reset, inputs=[], outputs=_outputs)
 
-        # Investigative tools — no parameter needed
+        # Investigative tools - no parameter needed
         def _make_investigate_handler(tool_name: str):
             def _handler():
                 return handle_step(env, tool_name, "", "", "")
@@ -577,7 +555,7 @@ def build_ui(env: MicroSocGymEnvironment) -> gr.Blocks:
             outputs=_outputs,
         )
 
-        # Remediation tools — each reads its own specific input
+        # Remediation tools - each reads its own specific input
         def _make_remediate_handler(tool_name: str):
             def _handler(ip: str, fp: str, pid: str):
                 return handle_step(env, tool_name, ip, fp, pid)

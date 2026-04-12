@@ -4,49 +4,36 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""
-Pure HTML/SVG string generators for the Micro-SOC Gym UI.
-
-No Gradio imports. No state. Every function takes plain data and
-returns an HTML string.
-
-All surface/text colors are expressed as CSS custom properties defined
-in layout.py's CSS block so they flip correctly between Gradio's dark
-and light themes. Semantic accent colors (green/orange/red) are kept
-as hex because they carry fixed meaning regardless of theme.
-"""
-
 from __future__ import annotations
 from typing import List, Tuple
 
 
 # Scenario metadata
-
 SCENARIO_META = {
     "easy": {
-        "label": "Easy — HTTP Flood",
+        "label": "Easy - HTTP Flood",
         "color": "#22c55e",
         "border": "#16a34a",
         "threat": "A scanner is hammering the web server with hundreds of 404 requests per second.",
-        "log_hint": "Start with <code>read_access_log</code> — look for an IP making far more requests than the others.",
+        "log_hint": "Start with <code>read_access_log</code> - look for an IP making far more requests than the others.",
         "fix": "One action: <code>block_ip(&lt;attacker_ip&gt;)</code>",
         "warn": None,
     },
     "medium": {
-        "label": "Medium — SSH Brute-Force",
+        "label": "Medium - SSH Brute-Force",
         "color": "#f97316",
         "border": "#ea580c",
         "threat": "Repeated failed SSH login attempts are flooding the auth log from a single source.",
-        "log_hint": "Use <code>read_auth_log</code> — the attacker generates far more failed attempts than anyone else.",
+        "log_hint": "Use <code>read_auth_log</code> - the attacker generates far more failed attempts than anyone else.",
         "fix": "One action: <code>block_ip(&lt;attacker_ip&gt;)</code>",
         "warn": "An admin IP is mixed in the logs. Blocking it is a fatal mistake.",
     },
     "hard": {
-        "label": "Hard — Webshell C2",
+        "label": "Hard - Webshell C2",
         "color": "#ef4444",
         "border": "#dc2626",
         "threat": "A webshell has been planted and is making C2 callbacks. A malicious process is running.",
-        "log_hint": "Use <code>read_access_log</code> — find the backdoor filename and a PID in brackets.",
+        "log_hint": "Use <code>read_access_log</code> - find the backdoor filename and a PID in brackets.",
         "fix": "Three actions (any order): <code>block_ip</code> + <code>delete_file</code> + <code>kill_process</code>",
         "warn": "All three must succeed. Partial neutralisation keeps done=False.",
     },
@@ -77,7 +64,6 @@ REWARD_TABLE = [
 
 
 # Scenario header
-
 def scenario_header(scenario: str) -> str:
     m   = SCENARIO_META.get(scenario, SCENARIO_META[""])
     c   = m["color"]
@@ -116,7 +102,6 @@ def scenario_header(scenario: str) -> str:
 
 
 # Outcome banner
-
 def outcome_banner(done: bool, success: bool, total_reward: float, step_count: int) -> str:
     if not done:
         return (
@@ -146,13 +131,7 @@ def outcome_banner(done: bool, success: bool, total_reward: float, step_count: i
 
 
 # Hard scenario progress tracker
-
 def hard_progress(ip_blocked: bool, file_deleted: bool, process_killed: bool) -> str:
-    """
-    Visual checklist for the three required hard-scenario actions.
-    All three can be completed in any order - no enforced sequence.
-    Only rendered when scenario == 'hard'.
-    """
     def pill(label: str, done: bool) -> str:
         cls = "soc-pill soc-pill-done" if done else "soc-pill soc-pill-pending"
         icon = "\u2713" if done else "\u25cb"
@@ -170,7 +149,6 @@ def hard_progress(ip_blocked: bool, file_deleted: bool, process_killed: bool) ->
 
 
 # Action history table
-
 def action_history_table(history: list) -> str:
     if not history:
         return '<div class="soc-empty-state">No actions taken yet.</div>'
@@ -221,14 +199,8 @@ def action_history_table(history: list) -> str:
     )
 
 
-# Per-step reward bar chart (SVG)
-
+# Per-step reward bar chart
 def reward_chart_svg(history: List[Tuple[int, float, str]]) -> str:
-    """
-    history: list of (step_number, reward_for_that_step, tool_name)
-    Renders a per-step bar chart. Positive bars go up (green), negative down (red).
-    Axis lines and labels use CSS classes so they are visible on both themes.
-    """
     if not history:
         return '<div class="soc-chart-empty">Reward chart will appear here as actions are taken.</div>'
 
@@ -298,7 +270,6 @@ def reward_chart_svg(history: List[Tuple[int, float, str]]) -> str:
 
 
 # Reward reference table
-
 def reward_reference_html() -> str:
     color_map = {
         "positive": ("#14532d", "#16a34a", "#4ade80"),
@@ -332,7 +303,6 @@ def reward_reference_html() -> str:
 
 
 # Scenario quick-reference
-
 def scenario_reference_html() -> str:
     rows = [
         ("Easy",   "#22c55e", "access.log", "404 flood from random attacker IP",
@@ -369,7 +339,6 @@ def scenario_reference_html() -> str:
 
 
 # Stat card
-
 def stat_card(label: str, value: str, color: str = "#38bdf8") -> str:
     return (
         f'<div class="soc-stat-card">'
