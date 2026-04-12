@@ -74,10 +74,10 @@ def main():
         action_history: List[str] = []
 
         done = obs.get("done", False)
-        success = obs.get("success", False)
+        success = obs.get("observation", {}).get("success", False)
 
         # Get the initial alert info to give context to the agent and append to action_history
-        initial_info = obs.get("info", "")
+        initial_info = obs.get("observation", {}).get("info", "")
         if initial_info:
             action_history.append(f"Step 0: {initial_info}")
 
@@ -173,8 +173,8 @@ def main():
                 # Gets results of the step function
                 reward = obs.get("reward", 0.0)
                 done = obs.get("done", False)
-                success = obs.get("success", False)
-                inner_info = obs.get("info", "")
+                success = obs.get("observation", {}).get("success", False)
+                inner_info = obs.get("observation", {}).get("info", "")
 
             except Exception as e:
                 # If an error occurs, we end the episode cleanly and log the msg
