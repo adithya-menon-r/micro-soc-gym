@@ -15,7 +15,7 @@ OpenEnv HTTP API (handled by openenv-core's create_app):
     GET  /health         Liveness probe
 
 Additional endpoint:
-    GET  /grade_episode  Post-episode verification score (0.01 – 0.99)
+    GET  /grade_episode  Post-episode verification score (0.01 - 0.99)
 
 Gradio UI — mounted at /:
     Interactive SOC dashboard. Human-playable demo for judges.
@@ -38,12 +38,9 @@ from server.micro_soc_gym_environment import MicroSocGymEnvironment
 from server.ui import build_ui
 
 
-# ---------------------------------------------------------------------------
 # Singleton environment
 # Shared between the OpenEnv HTTP API and the Gradio UI.
 # One env per server process — consistent with max_concurrent_envs=1.
-# ---------------------------------------------------------------------------
-
 _env = MicroSocGymEnvironment()
 
 app = create_app(
@@ -55,12 +52,9 @@ app = create_app(
 )
 
 
-# ---------------------------------------------------------------------------
 # Extra endpoint: post-episode grading
 # Call after /step returns done=True, before the next /reset.
 # Returns a float in (0.01, 0.99) based on actual system state.
-# ---------------------------------------------------------------------------
-
 @app.get("/grade_episode")
 def grade_episode() -> dict:
     score = _env.grade_episode(_env.state.scenario)
@@ -74,18 +68,12 @@ def grade_episode() -> dict:
     }
 
 
-# ---------------------------------------------------------------------------
 # Gradio UI — mounted at /
-# ---------------------------------------------------------------------------
-
 _ui = build_ui(_env)
 app = gr.mount_gradio_app(app, _ui, path="/")
 
 
-# ---------------------------------------------------------------------------
 # Entry point
-# ---------------------------------------------------------------------------
-
 def main() -> None:
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=7860)

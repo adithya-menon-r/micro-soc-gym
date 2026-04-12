@@ -28,19 +28,19 @@ from server.ui.components import (
     stat_card,
 )
 
-# ── Module-level episode state ────────────────────────────────────────────────
+# Module-level episode state
 # Each item: (step_number, per_step_reward, tool_name)
 _step_rewards: List[Tuple[int, float, str]] = []
 # Each item: dict with step/tool/param/reward/result/success
 _action_history: List[dict] = []
 
-
+#reset the environment
 def _reset_state() -> None:
     global _step_rewards, _action_history
     _step_rewards = []
     _action_history = []
 
-
+#get the action parameter value based on the action
 def _param_str(action: MicroSocGymAction) -> str:
     if action.tool == "block_ip":
         return action.ip_address or "(none)"
@@ -50,7 +50,7 @@ def _param_str(action: MicroSocGymAction) -> str:
         return str(action.pid) if action.pid is not None else "(none)"
     return ""   # investigative tools have no parameter
 
-
+#check if the ip is blocked; file is deleted; process is killed fir the given environment
 def _hard_progress_state(env: MicroSocGymEnvironment):
     """
     Derive the three booleans for the hard-scenario progress tracker
@@ -86,8 +86,7 @@ def _hard_progress_state(env: MicroSocGymEnvironment):
     return ip_blocked, file_deleted, proc_killed
 
 
-# ── Public handlers ───────────────────────────────────────────────────────────
-
+# Public handlers: re-rendering the UI for the reset (getting the UI set for next episode of the environment)
 def handle_reset(env: MicroSocGymEnvironment):
     """Called when the user clicks Reset. Returns all UI output values."""
     _reset_state()
@@ -96,23 +95,24 @@ def handle_reset(env: MicroSocGymEnvironment):
     state = env.state
 
     scenario = state.scenario
-    total_reward = state.total_reward
+    # total_reward = state.total_reward
 
     return (
-        scenario_header(scenario),                          # scenario_header_html
+        scenario_header(scenario),                         # scenario_header_html
         outcome_banner(False, False, 0.0, 0),              # outcome_html
-        hard_progress(False, False, False)                  # hard_progress_html
+        hard_progress(False, False, False)                 # hard_progress_html
             if scenario == "hard" else "",
         stat_card("STEPS", f"0 / 8"),                      # steps_stat
-        stat_card("TOTAL REWARD", "+0.00", "#38bdf8"),     # reward_stat
-        action_history_table([]),                           # history_html
-        reward_chart_svg([]),                               # chart_html
-        obs.info,                                           # feedback_box (last action result)
-        gr.update(interactive=True),                        # step_btn enable
-        gr.update(interactive=True),                        # tool_dropdown
+        stat_card("TOTAL REWARD", "+0.00", "#38bdf8"),   # reward_stat
+        action_history_table([]),                          # history_html
+        reward_chart_svg([]),                              # chart_html
+        obs.info,                                          # feedback_box (last action result)
+        gr.update(interactive=True),                       # step_btn enable
+        gr.update(interactive=True),                       # tool_dropdown
     )
 
-
+# execute the action/step in the soc environment
+# tracking of the reward history and the action history for the current episode takesplace
 def handle_step(
     env: MicroSocGymEnvironment,
     tool: str,

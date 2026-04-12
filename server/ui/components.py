@@ -16,8 +16,7 @@ from __future__ import annotations
 from typing import List, Tuple
 
 
-# ── Scenario metadata ────────────────────────────────────────────────────────
-
+# Scenario metadata
 SCENARIO_META = {
     "easy": {
         "label": "Easy — HTTP Flood",
@@ -46,7 +45,7 @@ SCENARIO_META = {
         "border": "#dc2626",
         "threat": "A webshell has been planted and is making C2 callbacks. A malicious process is running.",
         "log_hint": "Use <code>read_access_log</code> — find the backdoor filename and a PID in brackets.",
-        "fix": "Three actions (any order): <code>block_ip</code> + <code>delete_file</code> + <code>kill_process</code>",
+        "fix": "Three actions : <code>block_ip</code> + <code>delete_file</code> + <code>kill_process</code>",
         "warn": "All three must succeed. Partial neutralisation keeps done=False.",
     },
     "": {
@@ -67,18 +66,17 @@ REWARD_TABLE = [
     ("+0.50", "Correct remediation action on the right target", "positive"),
     ("+0.25", "Correct investigative direction but wrong log file", "partial"),
     ("+0.10", "Correct tool, wrong IP / file / PID", "partial"),
-    ("−0.20", "kill_process on a PID that doesn't exist", "negative"),
-    ("−0.25", "Reading logs after all remediation tools used (stalling)", "negative"),
-    ("−0.30", "Repeating the same log read or already-blocked action", "negative"),
-    ("−0.50", "Wrong tool for the scenario", "negative"),
-    ("−0.75", "Deleting a wrong file", "negative"),
-    ("−1.00", "Blocking the admin IP (medium scenario)", "fatal"),
-    ("−1.00", "Attempting remediation without any prior investigation → episode ends", "fatal"),
+    ("-0.20", "kill_process on a PID that doesn't exist", "negative"),
+    ("-0.25", "Reading logs after all remediation tools used (stalling)", "negative"),
+    ("-0.30", "Repeating the same log read or already-blocked action", "negative"),
+    ("-0.50", "Wrong tool for the scenario", "negative"),
+    ("-0.75", "Deleting a wrong file", "negative"),
+    ("-1.00", "Blocking the admin IP (medium scenario)", "fatal"),
+    ("-1.00", "Attempting remediation without any prior investigation → episode ends", "fatal"),
 ]
 
 
-# ── Scenario header ──────────────────────────────────────────────────────────
-
+# Scenario header: returns scenario based warning, log, and fix UI 
 def scenario_header(scenario: str) -> str:
     m = SCENARIO_META.get(scenario, SCENARIO_META[""])
     c, dim, bdr = m["color"], m["dim"], m["border"]
@@ -119,8 +117,8 @@ def scenario_header(scenario: str) -> str:
     )
 
 
-# ── Outcome banner ───────────────────────────────────────────────────────────
-
+# Outcome banner: displays the results of the episode
+# Should it display just the reward for the agent or also the grader value? this thing i have no idea 
 def outcome_banner(done: bool, success: bool, total_reward: float, step_count: int) -> str:
     if not done:
         return (
@@ -150,12 +148,16 @@ def outcome_banner(done: bool, success: bool, total_reward: float, step_count: i
     )
 
 
-# ── Hard scenario progress tracker ───────────────────────────────────────────
-
+# Hard scenario progress tracker: checks for all the three completed actions (block_ip; delete_file; kill_process) and 
+# renders the UI visuals based on 'done' parameter
 def hard_progress(ip_blocked: bool, file_deleted: bool, process_killed: bool) -> str:
     """
     Visual checklist for the three required hard-scenario actions.
     Only rendered when scenario == 'hard'.
+
+    All three actions are required but can be completed in ANY order —
+    the environment's done=True fires the moment all three conditions
+    are satisfied simultaneously. There is no enforced sequence.
     """
     def pill(label: str, done: bool) -> str:
         bg = "#052e16" if done else "#1e293b"
@@ -182,8 +184,7 @@ def hard_progress(ip_blocked: bool, file_deleted: bool, process_killed: bool) ->
     )
 
 
-# ── Action history table ─────────────────────────────────────────────────────
-
+# Action history table: returns the history of steps, tools, parameters, rewards and feedback
 def action_history_table(history: list) -> str:
     if not history:
         return (
@@ -204,7 +205,7 @@ def action_history_table(history: list) -> str:
     def tool_color(tool: str) -> str:
         if tool in ("read_access_log", "read_auth_log"):
             return "#38bdf8"  # blue — investigative
-        return "#c084fc"       # purple — remediation
+        return "#c084fc"      # purple — remediation
 
     rows = ""
     for entry in reversed(history):   # most recent first
@@ -244,13 +245,13 @@ def action_history_table(history: list) -> str:
     )
 
 
-# ── Per-step reward bar chart (SVG) ─────────────────────────────────────────
-
+# Per-step reward bar chart (SVG): this is kind of different when compared to the progress of line chart
+# Also this corresponds to only the rewards and not the grader values, idk is this fine enough
 def reward_chart_svg(history: List[Tuple[int, float, str]]) -> str:
     """
     history: list of (step_number, reward_for_that_step, tool_name)
     Renders a per-step bar chart — each bar is one action's reward.
-    Positive bars go up (green), negative go down (red).
+    Positive bars go up (green), negative go down (red), zero stays and is clearly differentiable
     """
     if not history:
         return (
@@ -327,8 +328,7 @@ def reward_chart_svg(history: List[Tuple[int, float, str]]) -> str:
     )
 
 
-# ── Reward reference table ───────────────────────────────────────────────────
-
+# Reward reference table
 def reward_reference_html() -> str:
     color_map = {
         "positive": ("#052e16", "#16a34a", "#4ade80"),
@@ -361,8 +361,7 @@ def reward_reference_html() -> str:
     )
 
 
-# ── Scenario quick-reference ─────────────────────────────────────────────────
-
+# Scenario quick-reference
 def scenario_reference_html() -> str:
     rows = [
         ("Easy", "#4ade80", "access.log", "404 flood from random attacker IP",
@@ -398,15 +397,17 @@ def scenario_reference_html() -> str:
     )
 
 
-# ── Stat card ────────────────────────────────────────────────────────────────
-
+# Stat card
 def stat_card(label: str, value: str, color: str = "#38bdf8") -> str:
     return (
         f'<div style="background:#111827;border:1px solid #1f2d3d;border-radius:8px;'
         f'padding:12px 16px;text-align:center;">'
-        f'<div style="font-size:11px;color:#334155;font-family:monospace;'
-        f'letter-spacing:0.5px;margin-bottom:4px;">{label}</div>'
-        f'<div style="font-size:22px;font-weight:700;color:{color};'
-        f'font-family:monospace;">{value}</div>'
+
+            f'<div style="font-size:11px;color:#334155;font-family:monospace;'
+            f'letter-spacing:0.5px;margin-bottom:4px;">{label}</div>'
+
+            f'<div style="font-size:22px;font-weight:700;color:{color};'
+            f'font-family:monospace;">{value}</div>'
+
         f'</div>'
     )
