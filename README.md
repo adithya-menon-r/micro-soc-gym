@@ -151,6 +151,11 @@ micro_soc_gym/
 │   ├── medium_attack.sh              # Mock SSH Brute-Force + Decoys
 │   └── hard_attack.sh                # Webshell runtime process simulation
 ├── server/                           # OpenEnv Backend Services
+│   ├── ui/                           # Gradio UI subpackage
+│   │   ├── __init__.py               # Exports build_ui()
+│   │   ├── components.py             # Pure HTML/SVG string generators (theme-aware)
+│   │   ├── handlers.py               # Gradio event handlers and episode state
+│   │   └── layout.py                 # gr.Blocks layout assembly and component wiring
 │   ├── __init__.py                   # Package initializer
 │   ├── app.py                        # FastAPI endpoints and Gradio Telemetry Dashboard
 │   └── micro_soc_gym_environment.py  # Primary orchestration, grader matrix, and rules engines
