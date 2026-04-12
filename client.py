@@ -45,13 +45,15 @@ class MicroSocGymClient:
         file_path: Optional[str] = None,
         pid: Optional[int] = None,
     ) -> Dict[str, Any]:
-        payload: Dict[str, Any] = {"tool": tool}
+        action_payload: Dict[str, Any] = {"tool": tool}
         if ip_address is not None:
-            payload["ip_address"] = ip_address
+            action_payload["ip_address"] = ip_address
         if file_path is not None:
-            payload["file_path"] = file_path
+            action_payload["file_path"] = file_path
         if pid is not None:
-            payload["pid"] = pid
+            action_payload["pid"] = pid
+
+        payload = {"action": action_payload}
 
         resp = self.session.post(
             f"{self.base_url}/step",
