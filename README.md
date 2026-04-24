@@ -1,4 +1,12 @@
-# Micro SOC Gym
+---
+title: Micro SOC Gym
+sdk: docker
+app_port: 7860
+tags:
+  - openenv
+---
+
+<h1 align="center">Micro SOC Gym</h1>
 
 **Micro SOC Gym** models a real time **Security Operations Center (SOC)**. It simulates the SOC workload to evaluate **Reinforcement Learning (RL) agents**. Rather than interacting with static datasets, agents interact with a real time, monolithic Docker container running the environment.
 
